@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAMBite</title>
+<script>tailwind.config={darkMode:'class'};</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  body { background: #f3f4f6; }
+  .phone-frame { width:100%; max-width:28rem; margin:0 auto; min-height:100vh; background:#fff; box-shadow:0 0 30px rgba(0,0,0,.12); position:relative; }
+  .nav-bottom { position:sticky; bottom:0; z-index:50; }
+  .nav-item.active { color:#3b82f6; }
+  .card-tap:active { transform:scale(.98); transition:transform .1s; }
+  .fade-in { animation:fadeIn .25s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .modal-overlay { background:rgba(0,0,0,.5); z-index:100; }
+  .badge-stock-low { background:#fef3c7; color:#92400e; }
+  .badge-stock-out { background:#fee2e2; color:#991b1b; }
+  .badge-stock-ok { background:#d1fae5; color:#065f46; }
+  input[type=number]::-webkit-inner-spin-button { opacity:1; }
+  /* ===== DARK MODE ===== */
+  html.dark body { background: #111827; }
+  html.dark .phone-frame { background: #1f2937; box-shadow: 0 0 30px rgba(0,0,0,.5); }
+  html.dark .phone-frame .bg-white { background-color: #1f2937; }
+  html.dark .phone-frame .bg-gray-50 { background-color: #374151; }
+  html.dark .phone-frame .text-gray-800 { color: #f3f4f6; }
+  html.dark .phone-frame .text-gray-700 { color: #e5e7eb; }
+  html.dark .phone-frame .text-gray-600 { color: #d1d5db; }
+  html.dark .phone-frame .text-gray-500 { color: #9ca3af; }
+  html.dark .phone-frame .text-gray-400 { color: #7f8b9b; }
+  html.dark .phone-frame .text-gray-300 { color: #6b7280; }
+  html.dark .phone-frame .border-gray-100 { border-color: #374151; }
+  html.dark .phone-frame .border-gray-200 { border-color: #4b5563; }
+  html.dark .phone-frame .border-gray-300 { border-color: #6b7280; }
+  html.dark .phone-frame input,
+  html.dark .phone-frame select { background-color: #374151; color: #e5e7eb; border-color: #4b5563; }
+  html.dark .phone-frame input::placeholder { color: #6b7280; }
+  html.dark .phone-frame .hover\:bg-gray-100:hover { background-color: #374151; }
+  html.dark .phone-frame .hover\:bg-gray-200:hover { background-color: #4b5563; }
+  html.dark .nav-bottom { background: #1f2937; border-color: #374151; }
+  html.dark .nav-item { color: #9ca3af; }
+  html.dark .modal-overlay { background: rgba(0,0,0,.75); }
+  html.dark .badge-stock-ok { background: #065f46; color: #a7f3d0; }
+  html.dark .badge-stock-low { background: #78350f; color: #fde68a; }
+  html.dark .badge-stock-out { background: #7f1d1d; color: #fecaca; }
+  html.dark .phone-frame .bg-blue-50 { background-color: #1e3a5f; }
+  html.dark .phone-frame .bg-blue-100 { background-color: #1e3a5f; }
+  html.dark .phone-frame .bg-green-100 { background-color: #064e3b; }
+  html.dark .phone-frame .bg-yellow-100 { background-color: #78350f; }
+  html.dark .phone-frame .bg-red-100 { background-color: #7f1d1d; }
+  html.dark .phone-frame .bg-purple-100 { background-color: #4c1d95; }
+  html.dark .phone-frame .bg-orange-100 { background-color: #7c2d12; }
+  html.dark .phone-frame .bg-green-200 { background-color: #065f46; }
+  html.dark .phone-frame .bg-green-50 { background-color: #064e3b; }
+  html.dark .phone-frame .bg-red-50 { background-color: #7f1d1d; }
+  html.dark .phone-frame .text-blue-600 { color: #93c5fd; }
+  html.dark .phone-frame .text-blue-500 { color: #93c5fd; }
+  html.dark .phone-frame .text-blue-700 { color: #60a5fa; }
+  html.dark .phone-frame .text-green-600 { color: #86efac; }
+  html.dark .phone-frame .text-green-700 { color: #6ee7b7; }
+  html.dark .phone-frame .text-red-600 { color: #fca5a5; }
+  html.dark .phone-frame .text-red-700,
+  html.dark .phone-frame .text-red-800 { color: #fca5a5; }
+  html.dark .phone-frame .text-purple-600,
+  html.dark .phone-frame .text-purple-700,
+  html.dark .phone-frame .text-purple-800 { color: #c4b5fd; }
+  html.dark .phone-frame .text-yellow-700,
+  html.dark .phone-frame .text-yellow-800 { color: #fde68a; }
+  html.dark .phone-frame .text-orange-700,
+  html.dark .phone-frame .text-orange-800 { color: #fdba74; }
+  html.dark .phone-frame .text-green-900,
+  html.dark .phone-frame .text-green-800 { color: #6ee7b7; }
+  html.dark .phone-frame .text-blue-800 { color: #93c5fd; }
+  html.dark .phone-frame .border-blue-100 { border-color: #1e3a8a; }
+  html.dark .phone-frame .from-white { --tw-gradient-from: #1f2937 var(--tw-gradient-from-position); }
+  html.dark .phone-frame .from-gray-50 { --tw-gradient-from: #374151 var(--tw-gradient-from-position); }
+  html.dark .phone-frame .to-blue-50\/40 { --tw-gradient-to: rgba(30,64,175,.2) var(--tw-gradient-to-position); }
+</style>
+</head>
+<body class="flex justify-center">
+
+<div class="phone-frame flex flex-col">
+
+  <!-- ==================== MODAL PRODUCTO ==================== -->
+  <div id="modal-producto" class="modal-overlay fixed inset-0 flex items-end sm:items-center justify-center hidden">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div id="modal-imagen-wrap" class="hidden -mx-6 -mt-6 mb-4">
+        <img id="modal-imagen" class="w-full h-48 object-cover sm:rounded-t-3xl" onerror="this.parentElement.classList.add('hidden')">
+      </div>
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-nombre" class="text-lg font-bold text-gray-800"></h3>
+        <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+      <p id="modal-desc" class="text-sm text-gray-500 mb-2"></p>
+      <div class="flex items-center gap-3 mb-4">
+        <span id="modal-precio" class="text-2xl font-bold text-blue-600"></span>
+        <span id="modal-stock-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold"></span>
+      </div>
+      <div id="modal-extras-section" class="mb-4 hidden">
+        <p class="text-sm font-medium text-gray-700 mb-2">Ingredientes Extra:</p>
+        <div id="modal-extras-list" class="space-y-2"></div>
+      </div>
+      <div class="flex items-center gap-3 mb-4">
+        <label class="text-sm font-medium text-gray-700">Cantidad:</label>
+        <div class="flex items-center border border-gray-300 rounded-lg">
+          <button onclick="modalCambiarCantidad(-1)" class="px-3 py-1 text-gray-600 font-bold hover:bg-gray-100">−</button>
+          <span id="modal-cantidad" class="px-4 py-1 font-semibold">1</span>
+          <button onclick="modalCambiarCantidad(1)" class="px-3 py-1 text-gray-600 font-bold hover:bg-gray-100">+</button>
+        </div>
+      </div>
+      <div class="flex justify-between items-center mb-4 p-3 bg-gray-50 rounded-xl">
+        <span class="text-sm text-gray-600">Subtotal:</span>
+        <span id="modal-subtotal" class="text-lg font-bold text-gray-800">$0.00</span>
+      </div>
+      <button onclick="confirmarAgregar()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">
+        <i class="fa-solid fa-cart-plus mr-2"></i>Agregar al Carrito
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== LOGIN ==================== -->
+  <div id="vista-login" class="flex-1 flex flex-col justify-center px-6 fade-in">
+    <div class="text-center mb-8">
+      <i class="fa-solid fa-utensils text-5xl text-blue-600 mb-3"></i>
+      <h1 class="text-2xl font-bold text-gray-800">UAMBite</h1>
+      <p class="text-gray-500 text-sm">Pedidos de comida UAM</p>
+    </div>
+    <form id="form-login" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Carnet</label>
+        <input id="login-carnet" type="text" required placeholder="ADMIN001"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input id="login-password" type="password" required placeholder="••••••••"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+      </div>
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">
+        <i class="fa-solid fa-right-to-bracket mr-2"></i>Iniciar Sesión
+      </button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-6">
+      ¿No tienes cuenta?
+      <button onclick="mostrarVista('register')" class="text-blue-600 font-medium">Regístrate</button>
+    </p>
+  </div>
+
+  <!-- ==================== CAMBIO DE CONTRASEÑA OBLIGATORIO ==================== -->
+  <div id="vista-cambiar-password" class="flex-1 flex flex-col justify-center px-6 fade-in hidden">
+    <div class="text-center mb-6">
+      <i class="fa-solid fa-shield-halved text-5xl text-blue-600 mb-3"></i>
+      <h2 class="text-xl font-bold text-gray-800">Cambia tu contraseña</h2>
+      <p class="text-gray-500 text-sm mt-1">Estás usando una contraseña temporal. Define una nueva para continuar.</p>
+    </div>
+    <form id="form-cambiar-password" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña actual (temporal)</label>
+        <input id="cp-actual" type="password" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
+        <input id="cp-nuevo" type="password" required minlength="6" placeholder="Mínimo 6 caracteres"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar nueva contraseña</label>
+        <input id="cp-confirmar" type="password" required minlength="6"
+          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+      </div>
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">
+        <i class="fa-solid fa-key mr-2"></i>Establecer contraseña
+      </button>
+    </form>
+  </div>
+
+  <!-- ==================== REGISTER ==================== -->
+  <div id="vista-register" class="flex-1 flex-col justify-center px-6 hidden">
+    <div class="flex items-center mb-6 mt-6">
+      <button onclick="mostrarVista('login')" class="text-blue-600 mr-3"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+      <h2 class="text-xl font-bold text-gray-800">Crear Cuenta</h2>
+    </div>
+    <form id="form-register" class="space-y-3">
+      <input id="reg-carnet" type="text" required placeholder="Carnet"
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="reg-nombre" type="text" required placeholder="Nombre"
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="reg-apellido" type="text" required placeholder="Apellido"
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="reg-correo" type="email" required placeholder="Correo"
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+      <input id="reg-password" type="password" required placeholder="Contraseña"
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+      <select id="reg-rol" required
+        class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        <option value="ESTUDIANTE">Estudiante</option>
+        <option value="PROFESOR">Profesor</option>
+      </select>
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">
+        <i class="fa-solid fa-user-plus mr-2"></i>Registrarse
+      </button>
+    </form>
+  </div>
+
+  <!-- ==================== HOME ==================== -->
+  <div id="vista-home" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 flex justify-between items-center">
+      <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-shop mr-2 text-blue-600"></i>Locales</h2>
+      <div class="flex items-center gap-2">
+        <button onclick="cargarHome()" class="text-blue-600 text-sm"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+        <button onclick="toggleDarkMode()" class="text-gray-400 hover:text-gray-600 text-lg leading-none" title="Modo oscuro / claro">
+          <i id="dark-icon" class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+      <div id="locales-container" class="space-y-3"></div>
+      <div id="productos-destacados" class="hidden">
+        <div class="flex items-center justify-between mt-4 mb-2">
+          <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-fire text-orange-500 mr-2"></i>Productos Destacados</h3>
+        </div>
+        <div id="productos-destacados-grid" class="grid grid-cols-2 gap-2.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LOCAL DETAIL ==================== -->
+  <div id="vista-local" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 border-b border-gray-100 flex items-center gap-3">
+      <button onclick="mostrarVista('home')" class="text-blue-600"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+      <div><h2 id="local-det-nombre" class="text-lg font-bold text-gray-800"></h2>
+      <p id="local-det-info" class="text-xs text-gray-500"></p></div>
+    </div>
+    <div id="local-det-productos" class="flex-1 overflow-y-auto px-4 py-3 space-y-2"></div>
+  </div>
+
+  <!-- ==================== CART ==================== -->
+  <div id="vista-cart" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 border-b border-gray-100 flex justify-between items-center">
+      <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-cart-shopping mr-2 text-blue-600"></i>Carrito</h2>
+      <button onclick="state.cart=[];persistirCarrito();actualizarBadge();renderCart()" class="text-red-500 text-sm"><i class="fa-solid fa-trash mr-1"></i>Vaciar</button>
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+    <div id="cart-footer" class="p-4 border-t border-gray-200 space-y-3 hidden">
+      <div class="flex justify-between font-bold text-lg"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div>
+      <div id="cart-descuento-row" class="hidden flex justify-between text-green-600 text-sm"><span>Descuento</span><span id="cart-descuento-val">-$0.00</span></div>
+      <div class="flex justify-between font-bold text-xl border-t pt-2"><span>Total</span><span id="cart-total">$0.00</span></div>
+      <div class="flex gap-2">
+        <input id="cart-codigo-desc" type="text" placeholder="Código descuento"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
+        <button onclick="aplicarDescuento()" class="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-200 transition">
+          <i class="fa-solid fa-tag mr-1"></i>Aplicar
+        </button>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Franja Horaria (opcional)</label>
+        <select id="cart-franja" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+          <option value="">Sin franja — pedir ya</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Tipo Entrega</label>
+          <select id="cart-tipo-entrega" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+            <option value="RETIRO_LOCAL">Retiro en Local</option>
+            <option value="ENTREGA_INTERNA">Entrega Interna</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Método Pago</label>
+          <select id="cart-metodo-pago" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="TARJETA">Tarjeta</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+          </select>
+        </div>
+      </div>
+      <button id="btn-checkout" class="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition">
+        <i class="fa-solid fa-check mr-2"></i>Confirmar Pedido
+      </button>
+    </div>
+    <div id="cart-empty" class="flex-1 flex items-center justify-center text-gray-400">
+      <div class="text-center"><i class="fa-solid fa-cart-shopping text-5xl mb-3"></i><p>Carrito vacío</p></div>
+    </div>
+  </div>
+
+  <!-- ==================== ORDERS ==================== -->
+  <div id="vista-orders" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 border-b border-gray-100 flex justify-between items-center">
+      <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-clipboard-list mr-2 text-blue-600"></i>Mis Pedidos</h2>
+      <button onclick="limpiarHistorial()" class="text-gray-400 text-xs hover:text-red-500 transition"><i class="fa-solid fa-broom mr-1"></i>Limpiar</button>
+    </div>
+    <div id="orders-container" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+  </div>
+
+  <!-- ==================== PROFILE ==================== -->
+  <div id="vista-profile" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 border-b border-gray-100">
+      <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-user mr-2 text-blue-600"></i>Mi Perfil</h2>
+    </div>
+    <div id="profile-content" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+  </div>
+
+  <!-- ==================== ADMIN ==================== -->
+  <div id="vista-admin" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 border-b border-gray-100">
+      <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-gear mr-2 text-blue-600"></i>Panel Admin</h2>
+    </div>
+    <div class="flex gap-1 px-3 py-2 border-b border-gray-100 overflow-x-auto text-xs">
+      <button onclick="cargarAdminPedidos()" id="tab-admin-pedidos" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium transition flex-shrink-0">Pedidos</button>
+      <button onclick="cargarAdminUsuarios()" id="tab-admin-usuarios" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Usuarios</button>
+      <button onclick="cargarAdminLocales()" id="tab-admin-locales" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Locales</button>
+      <button onclick="cargarAdminProductos()" id="tab-admin-productos" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Productos</button>
+      <button onclick="cargarAdminFranjas()" id="tab-admin-franjas" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Franjas</button>
+      <button onclick="cargarAdminDescuentos()" id="tab-admin-descuentos" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Descuentos</button>
+      <button onclick="cargarAdminIngredientes()" id="tab-admin-ingredientes" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Ingredientes</button>
+    </div>
+    <div id="admin-content" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+  </div>
+
+  <!-- ==================== LOCAL ADMIN (encargado) ==================== -->
+  <div id="vista-local-admin" class="flex-1 flex flex-col hidden">
+    <div class="p-4 pb-2 border-b border-gray-100">
+      <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-store mr-2 text-blue-600"></i>Mi Local</h2>
+    </div>
+    <div class="flex gap-1 px-3 py-2 border-b border-gray-100 overflow-x-auto text-xs">
+      <button onclick="cargarLocalPedidos()" id="tab-la-pedidos" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium transition flex-shrink-0">Pedidos</button>
+      <button onclick="cargarMiLocal()" id="tab-la-local" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Local</button>
+      <button onclick="cargarLocalProductos()" id="tab-la-productos" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Productos</button>
+      <button onclick="cargarLocalFranjas()" id="tab-la-franjas" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Franjas</button>
+      <button onclick="cargarLocalDescuentos()" id="tab-la-descuentos" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Descuentos</button>
+      <button onclick="cargarLocalIngredientes()" id="tab-la-ingredientes" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0">Ingredientes</button>
+    </div>
+    <div id="local-admin-content" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+  </div>
+
+  <!-- ==================== BOTTOM NAV ==================== -->
+  <div id="nav-bottom" class="nav-bottom bg-white border-t border-gray-200 px-2 py-2 flex justify-around items-center hidden">
+    <button onclick="mostrarVista('home')" data-nav="home" class="nav-item active flex flex-col items-center text-xs text-gray-400">
+      <i class="fa-solid fa-house text-xl"></i><span>Inicio</span></button>
+    <button onclick="mostrarVista('cart')" data-nav="cart" class="nav-item flex flex-col items-center text-xs text-gray-400">
+      <i class="fa-solid fa-cart-shopping text-xl"></i><span id="cart-badge" class="relative">Carrito<span id="cart-count" class="hidden absolute -top-2 -right-5 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span></span></button>
+    <button onclick="mostrarVista('orders')" data-nav="orders" class="nav-item flex flex-col items-center text-xs text-gray-400">
+      <i class="fa-solid fa-receipt text-xl"></i><span>Pedidos</span></button>
+    <button onclick="mostrarVista('profile')" data-nav="profile" class="nav-item flex flex-col items-center text-xs text-gray-400">
+      <i class="fa-solid fa-user text-xl"></i><span>Perfil</span></button>
+    <button id="nav-local-btn" onclick="mostrarVista('local-admin')" data-nav="local-admin" class="nav-item flex flex-col items-center text-xs text-gray-400 hidden">
+      <i class="fa-solid fa-store text-xl"></i><span>Mi Local</span></button>
+    <button id="nav-admin-btn" onclick="mostrarVista('admin')" data-nav="admin" class="nav-item flex flex-col items-center text-xs text-gray-400 hidden">
+      <i class="fa-solid fa-gear text-xl"></i><span>Admin</span></button>
+    <button onclick="cerrarSesion()" class="nav-item flex flex-col items-center text-xs text-gray-400">
+      <i class="fa-solid fa-right-from-bracket text-xl"></i><span>Salir</span></button>
+  </div>
+
+</div>
+
+<script>
+// ==================== ESTADO GLOBAL ====================
+const API = (location.hostname===''||location.hostname==='localhost'||location.hostname==='127.0.0.1')?'http://localhost:8090/api':'/api';
+let state={
+  token:null,user:null,locales:[],productos:[],cart:[],franjas:[],
+  descuentos:[],ingredientesExtra:[],prodIngExtras:[],
+  descuentoAplicado:null,localActual:null,
+  modalProd:null,modalCant:1,modalExtrasSel:[]
+};
+
+// ==================== PERSISTENCIA ====================
+function guardarSesion(d){
+  state.token=d.token;state.user=d;
+  localStorage.setItem('uambite_token',d.token);
+  localStorage.setItem('uambite_user',JSON.stringify(d));
+  document.getElementById('nav-admin-btn').classList.toggle('hidden',d.rol!=='ADMIN');
+  document.getElementById('nav-local-btn').classList.toggle('hidden',d.rol!=='LOCAL');
+}
+function cargarSesion(){const t=localStorage.getItem('uambite_token'),u=localStorage.getItem('uambite_user');if(t&&u){state.token=t;state.user=JSON.parse(u);return true;}return false;}
+function cerrarSesion(){localStorage.clear();state.token=null;state.user=null;state.cart=[];state.descuentoAplicado=null;actualizarBadge();mostrarVista('login');}
+
+// ==================== HELPERS API ====================
+async function apiCall(method,path,body=null,auth=true){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(auth&&state.token)opts.headers['Authorization']='Bearer '+state.token;
+  if(body)opts.body=JSON.stringify(body);
+  // Auto-paginate: append size=1000 to list GETs and unwrap Page content
+  let url=API+path;
+  if(method==='GET'&&!url.includes('?')&&!path.includes('{')&&!path.includes('disponibles')){
+    url+='?size=1000';
+  }
+  const res=await fetch(url,opts);
+  if(!res.ok){let msg=`Error ${res.status}`;try{const e=await res.json();msg=e.message||e.error||msg;}catch(_){}throw new Error(msg);}
+  if(res.status===204)return null;
+  const data=await res.json();
+  return (data&&Array.isArray(data.content))?data.content:data;
+}
+
+async function apiUpload(path,file){
+  const fd=new FormData();
+  fd.append('file',file);
+  const opts={method:'POST',headers:{},body:fd};
+  if(state.token)opts.headers['Authorization']='Bearer '+state.token;
+  const res=await fetch(API+path,opts);
+  if(!res.ok){let msg=`Error ${res.status}`;try{const e=await res.json();msg=e.message||e.error||msg;}catch(_){}throw new Error(msg);}
+  if(res.status===204)return null;
+  return await res.json();
+}
+
+// URL pública de la imagen de un recurso (los GET son públicos).
+function imgUrl(tipo,id){
+  const base=tipo==='local'?'/localcomida':tipo==='producto'?'/producto':'/ingredienteextra';
+  return API+base+'/'+id+'/imagen';
+}
+
+// Recarga la vista actual del admin/local-admin tras subir/borrar imagen.
+function recargarVistaAdmin(tipo){
+  const enLA=!document.getElementById('vista-local-admin').classList.contains('hidden');
+  if(tipo==='local'){enLA?cargarMiLocal():cargarAdminLocales();}
+  else if(tipo==='producto'){enLA?cargarLocalProductos():cargarAdminProductos();}
+  else if(tipo==='ingrediente'){enLA?cargarLocalIngredientes():cargarAdminIngredientes();}
+}
+
+async function subirImagen(tipo,id,nombre){
+  const html=`<div class="text-left">
+    <p class="text-sm text-gray-500 mb-1">Subir imagen para: <b>${nombre}</b></p>
+    <p class="text-xs text-gray-400 mb-3">Formatos: JPG, PNG, WEBP. Máx 5MB.</p>
+    <input type="file" id="img-file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm">
+    <div id="img-preview-wrap" class="mt-3 hidden"><img id="img-preview" class="w-full h-40 object-cover rounded-lg border"></div>
+  </div>`;
+  const r=await Swal.fire({
+    title:'Subir imagen',html,showCancelButton:true,confirmButtonText:'Subir',cancelButtonText:'Cancelar',
+    didOpen:()=>{
+      const input=document.getElementById('img-file');
+      const wrap=document.getElementById('img-preview-wrap');
+      const prev=document.getElementById('img-preview');
+      input.addEventListener('change',()=>{
+        if(input.files&&input.files[0]){
+          const reader=new FileReader();
+          reader.onload=e=>{prev.src=e.target.result;wrap.classList.remove('hidden');};
+          reader.readAsDataURL(input.files[0]);
+        }
+      });
+    },
+    preConfirm:()=>{
+      const input=document.getElementById('img-file');
+      if(!input.files||!input.files[0]){Swal.showValidationMessage('Selecciona un archivo');return false;}
+      const f=input.files[0];
+      if(f.size>5*1024*1024){Swal.showValidationMessage('La imagen supera 5MB');return false;}
+      if(!['image/jpeg','image/png','image/webp'].includes(f.type)){Swal.showValidationMessage('Tipo no permitido (jpg/png/webp)');return false;}
+      return f;
+    }
+  });
+  if(!r.isConfirmed||!r.value)return;
+  try{
+    const base=tipo==='local'?'/localcomida':tipo==='producto'?'/producto':'/ingredienteextra';
+    await apiUpload(base+'/'+id+'/imagen',r.value);
+    Swal.fire({icon:'success',title:'Imagen subida',timer:1000,showConfirmButton:false});
+    recargarVistaAdmin(tipo);
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function eliminarImagen(tipo,id,nombre){
+  const r=await Swal.fire({title:'¿Eliminar imagen?',text:nombre,icon:'warning',showCancelButton:true,confirmButtonText:'Sí, eliminar',confirmButtonColor:'#ef4444'});
+  if(!r.isConfirmed)return;
+  try{
+    const base=tipo==='local'?'/localcomida':tipo==='producto'?'/producto':'/ingredienteextra';
+    await apiCall('DELETE',base+'/'+id+'/imagen');
+    Swal.fire({icon:'success',title:'Imagen eliminada',timer:1000,showConfirmButton:false});
+    recargarVistaAdmin(tipo);
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+// ==================== NAVEGACIÓN SPA ====================
+function mostrarVista(vista){
+  ['login','register','home','cart','orders','profile','local','local-admin','admin','cambiar-password'].forEach(v=>document.getElementById('vista-'+v).classList.add('hidden'));
+  document.getElementById('vista-'+vista).classList.remove('hidden');
+  const nav=document.getElementById('nav-bottom');
+  if(['login','register','cambiar-password'].includes(vista)){nav.classList.add('hidden');}else{nav.classList.remove('hidden');}
+  document.querySelectorAll('.nav-item[data-nav]').forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector(`[data-nav="${vista}"]`);if(btn)btn.classList.add('active');
+  if(vista==='home')cargarHome();else if(vista==='cart')renderCart();else if(vista==='orders')cargarPedidos();else if(vista==='profile')cargarPerfil();else if(vista==='local-admin')cargarLocalPedidos();else if(vista==='admin')cargarAdminPedidos();
+}
+
+// ==================== MODAL PRODUCTO ====================
+let stockClass = s => s>10?'badge-stock-ok':s>0?'badge-stock-low':'badge-stock-out';
+let stockText = s => s>10?`Stock: ${s}`:s>0?`Quedan ${s}`:'Agotado';
+
+function abrirModalProducto(prod){
+  state.modalProd=prod; state.modalCant=1; state.modalExtrasSel=[];
+  document.getElementById('modal-nombre').textContent=prod.nombre;
+  document.getElementById('modal-desc').textContent=prod.descripcion||'';
+  const imgWrap=document.getElementById('modal-imagen-wrap');
+  const imgEl=document.getElementById('modal-imagen');
+  if(prod.tieneImagen){imgEl.src=imgUrl('producto',prod.id);imgWrap.classList.remove('hidden');}
+  else{imgEl.src='';imgWrap.classList.add('hidden');}
+  document.getElementById('modal-precio').textContent='$'+Number(prod.precio).toFixed(2);
+  const sb=document.getElementById('modal-stock-badge');
+  sb.textContent=stockText(prod.stock); sb.className='px-2 py-0.5 rounded-full text-xs font-semibold '+stockClass(prod.stock);
+  document.getElementById('modal-cantidad').textContent='1';
+  actualizarModalSubtotal();
+  const extraSec=document.getElementById('modal-extras-section');
+  const extraList=document.getElementById('modal-extras-list');
+  if(prod.permitePersonalizacion){
+    const extrasDisp=state.prodIngExtras.filter(pie=>pie.productoId===prod.id).map(pie=>state.ingredientesExtra.find(ie=>ie.id===pie.ingredienteExtraId)).filter(Boolean);
+    if(extrasDisp.length>0){
+      extraSec.classList.remove('hidden');
+      extraList.innerHTML=extrasDisp.map(e=>`
+        <label class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+          <input type="checkbox" value="${e.id}" data-precio="${e.precioExtra}" onchange="toggleExtra(this,'${e.id}',${e.precioExtra})" class="w-4 h-4 text-blue-600 rounded">
+          <span class="flex-1 text-sm text-gray-700">${e.nombre}</span>
+          <span class="text-sm font-medium text-blue-600">+$${Number(e.precioExtra).toFixed(2)}</span>
+        </label>`).join('');
+    }else{extraSec.classList.add('hidden');}
+  }else{extraSec.classList.add('hidden');}
+  document.getElementById('modal-producto').classList.remove('hidden');
+}
+
+function cerrarModal(){document.getElementById('modal-producto').classList.add('hidden');state.modalProd=null;}
+
+function toggleExtra(cb,id,precio){
+  if(cb.checked)state.modalExtrasSel.push({id,precioExtra:precio});
+  else state.modalExtrasSel=state.modalExtrasSel.filter(e=>e.id!==id);
+  actualizarModalSubtotal();
+}
+
+function modalCambiarCantidad(d){
+  state.modalCant=Math.max(1,Math.min(state.modalProd.stock,state.modalCant+d));
+  document.getElementById('modal-cantidad').textContent=state.modalCant;
+  actualizarModalSubtotal();
+}
+
+function actualizarModalSubtotal(){
+  const base=state.modalProd?Number(state.modalProd.precio):0;
+  const extras=state.modalExtrasSel.reduce((s,e)=>s+Number(e.precioExtra),0);
+  const sub=(base+extras)*state.modalCant;
+  document.getElementById('modal-subtotal').textContent='$'+sub.toFixed(2);
+}
+
+function confirmarAgregar(){
+  if(!state.modalProd)return;
+  const key=state.modalProd.id+'__'+state.modalExtrasSel.map(e=>e.id).sort().join(',');
+  const exist=state.cart.find(i=>i.cartKey===key);
+  if(exist){exist.cantidad+=state.modalCant;}else{
+    const extrasTotal=state.modalExtrasSel.reduce((s,e)=>s+Number(e.precioExtra),0);
+    state.cart.push({
+      cartKey:key,productoId:state.modalProd.id,nombre:state.modalProd.nombre,
+      precioUnitario:Number(state.modalProd.precio)+extrasTotal,
+      cantidad:state.modalCant,localNombre:state.modalProd.localComida,
+      localComidaId:state.modalProd.localComidaId,
+      extrasNombres:state.modalExtrasSel.map(e=>{const ing=state.ingredientesExtra.find(i=>i.id===e.id);return ing?ing.nombre:'';}).filter(Boolean),
+      ingredientesExtraIds:state.modalExtrasSel.map(e=>e.id)
+    });
+  }
+  persistirCarrito();actualizarBadge();cerrarModal();
+  Swal.fire({icon:'success',title:'Agregado',text:`${state.modalProd.nombre} al carrito`,timer:1000,showConfirmButton:false});
+}
+
+// ==================== LOGIN / REGISTER ====================
+document.getElementById('form-login').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  try{
+    const d=await apiCall('POST','/auth/login',{carnet:document.getElementById('login-carnet').value.trim(),password:document.getElementById('login-password').value},false);
+    guardarSesion(d);
+    if(d.requiereCambioPassword){
+      state.cart=JSON.parse(localStorage.getItem('uambite_cart_'+d.id)||'[]');
+      Swal.fire({icon:'info',title:'Contraseña temporal',text:'Debes cambiar tu contraseña antes de continuar.',timer:2000,showConfirmButton:false});
+      mostrarVista('cambiar-password');
+    }else{
+      Swal.fire({icon:'success',title:`Bienvenido, ${d.nombre}!`,timer:1500,showConfirmButton:false});
+      state.cart=JSON.parse(localStorage.getItem('uambite_cart_'+d.id)||'[]');actualizarBadge();mostrarVista('home');
+    }
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+});
+
+document.getElementById('form-cambiar-password').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const actual=document.getElementById('cp-actual').value;
+  const nuevo=document.getElementById('cp-nuevo').value;
+  const confirmar=document.getElementById('cp-confirmar').value;
+  if(nuevo.length<6){Swal.fire({icon:'warning',title:'Contraseña muy corta',text:'Mínimo 6 caracteres'});return;}
+  if(nuevo!==confirmar){Swal.fire({icon:'warning',title:'No coinciden',text:'La confirmación no coincide con la nueva contraseña'});return;}
+  if(actual===nuevo){Swal.fire({icon:'warning',title:'Misma contraseña',text:'La nueva contraseña debe ser distinta a la actual'});return;}
+  try{
+    await apiCall('POST','/auth/cambiar-password',{passwordActual:actual,passwordNuevo:nuevo});
+    state.user.requiereCambioPassword=false;
+    localStorage.setItem('uambite_user',JSON.stringify(state.user));
+    document.getElementById('form-cambiar-password').reset();
+    Swal.fire({icon:'success',title:'Contraseña actualizada',text:'Bienvenido a UAMBite',timer:1500,showConfirmButton:false});
+    mostrarVista('home');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+});
+
+document.getElementById('form-register').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  try{
+    const d=await apiCall('POST','/auth/register',{carnet:document.getElementById('reg-carnet').value.trim(),nombre:document.getElementById('reg-nombre').value.trim(),apellido:document.getElementById('reg-apellido').value.trim(),correo:document.getElementById('reg-correo').value.trim(),password:document.getElementById('reg-password').value,rol:document.getElementById('reg-rol').value},false);
+    guardarSesion(d);Swal.fire({icon:'success',title:'Cuenta creada!',timer:1500,showConfirmButton:false});mostrarVista('home');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+});
+
+// ==================== HOME ====================
+async function cargarHome(){
+  state.locales=[];state.productos=[];state.ingredientesExtra=[];state.prodIngExtras=[];
+  try{
+    const[locales,productos,ingExtras,pie]=await Promise.all([
+      apiCall('GET','/localcomida/all',null,false).catch(()=>[]),
+      apiCall('GET','/producto/all',null,false).catch(()=>[]),
+      apiCall('GET','/ingredienteextra/all',null,false).catch(()=>[]),
+      apiCall('GET','/productoingredienteextra/all',null,false).catch(()=>[])
+    ]);
+    state.locales=locales;state.productos=productos;state.ingredientesExtra=ingExtras;state.prodIngExtras=pie;renderLocales();
+  }catch(err){Swal.fire({icon:'error',title:'Error al cargar',text:err.message});renderLocales();}
+}
+
+function renderLocales(){
+  const container=document.getElementById('locales-container');
+  if(!Array.isArray(state.locales)||state.locales.length===0){
+    container.innerHTML='<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-shop-slash text-4xl mb-2"></i><p>No hay locales disponibles</p></div>';return;
+  }
+  container.innerHTML=state.locales.map(l=>{
+    const prods=state.productos.filter(p=>p.localComida===l.nombre);
+    const countProds=prods.length;
+    const sugeridos=prods.slice(0,4);
+    const prodsHtml=sugeridos.length>0?sugeridos.map(p=>{
+      const agotado=p.stock===0;
+      const badge=p.stock>10?'bg-green-100 text-green-700':p.stock>0?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-700';
+      const badgeTxt=p.stock>10?'Disp.':p.stock>0?`${p.stock}`:'Agot.';
+      return `<div class="flex-shrink-0 w-36 bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-2.5 shadow-sm">
+        ${p.tieneImagen?`<img src="${imgUrl('producto',p.id)}" class="w-full h-20 object-cover rounded-lg mb-1.5" onerror="this.style.display='none'">`:''}
+        <p class="font-semibold text-xs text-gray-800 truncate" title="${p.nombre}">${p.nombre}${p.permitePersonalizacion?' <i class="fa-solid fa-pencil text-purple-500"></i>':''}</p>
+        <p class="text-[10px] text-gray-500 truncate h-3">${p.descripcion||' '}</p>
+        <div class="flex items-center justify-between mt-1.5">
+          <span class="text-blue-600 font-bold text-xs">$${Number(p.precio).toFixed(2)}</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${badge}">${badgeTxt}</span>
+        </div>
+        <button onclick='event.stopPropagation();abrirModalProducto(${JSON.stringify(p).replace(/'/g,"&#39;")})' ${agotado?'disabled':''} class="mt-1.5 w-full bg-blue-600 text-white py-1 rounded-lg text-[11px] font-semibold hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-1">
+          <i class="fa-solid fa-cart-plus"></i>Agregar
+        </button>
+      </div>`;
+    }).join(''):'<p class="text-xs text-gray-400 italic py-2">Sin productos aún</p>';
+    return `<div class="bg-white border border-gray-200 rounded-2xl shadow-sm card-tap cursor-pointer overflow-hidden" onclick="verLocal('${l.id}')">
+      ${l.tieneImagen?`<img src="${imgUrl('local',l.id)}" class="w-full h-32 object-cover" onerror="this.style.display='none'">`:''}
+      <div class="p-4 pb-3">
+        <div class="flex items-start justify-between mb-1">
+          <div class="flex-1">
+            <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-store text-blue-500 mr-2"></i>${l.nombre}</h3>
+            <p class="text-xs text-gray-500"><i class="fa-solid fa-location-dot mr-1"></i>${l.ubicacion} · <i class="fa-regular fa-clock mr-1"></i>${l.horario||'Sin horario'}</p>
+          </div>
+          <i class="fa-solid fa-chevron-right text-gray-300 mt-1"></i>
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs font-semibold text-gray-700"><i class="fa-solid fa-fire text-orange-500 mr-1"></i>Productos Sugeridos</span>
+          <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">${countProds} en total</span>
+        </div>
+      </div>
+      <div class="px-4 pb-3">
+        <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x">${prodsHtml}${countProds>sugeridos.length?`<div class="flex-shrink-0 w-20 flex items-center justify-center bg-blue-50 border border-blue-100 border-dashed rounded-xl text-blue-600 text-xs font-semibold text-center px-2">+${countProds-sugeridos.length} más</div>`:''}</div>
+      </div>
+      <div class="border-t border-gray-100 px-4 py-2 flex justify-end items-center text-xs text-gray-400">
+        <span class="text-blue-600 font-medium">Ver local completo <i class="fa-solid fa-arrow-right ml-1"></i></span>
+      </div>
+    </div>`;
+    }).join('');
+  renderProductosDestacados();
+}
+
+function renderProductosDestacados(){
+  const prodsConStock=state.productos.filter(p=>p.stock>0);
+  const section=document.getElementById('productos-destacados');
+  const grid=document.getElementById('productos-destacados-grid');
+  if(prodsConStock.length===0){section.classList.add('hidden');return;}
+  section.classList.remove('hidden');
+  const destinados=prodsConStock.slice(0,8);
+  grid.innerHTML=destinados.map((p,idx)=>{
+    const sc=p.stock>10?'badge-stock-ok':p.stock>0?'badge-stock-low':'badge-stock-out';
+    const st=p.stock>10?`${p.stock} disp.`:p.stock>0?`Solo ${p.stock}`:'Agotado';
+    const icon=p.permitePersonalizacion?'<i class="fa-solid fa-pencil text-purple-500 text-[9px] ml-0.5" title="Personalizable"></i>':'';
+    const isFullWidth=idx%3===2;
+    if(isFullWidth){
+      return `<div class="bg-gradient-to-br from-white to-blue-50/40 border border-blue-100 rounded-2xl overflow-hidden flex items-center justify-between card-tap cursor-pointer shadow-sm hover:shadow-md transition-all col-span-2" onclick="verLocal('${p.localComidaId}')">
+        ${p.tieneImagen?`<img src="${imgUrl('producto',p.id)}" class="w-24 h-24 object-cover flex-shrink-0" onerror="this.style.display='none'">`:''}
+        <div class="flex-1 min-w-0 p-3">
+          <div class="flex items-center gap-2 mb-0.5">
+            <p class="font-semibold text-sm text-gray-800">${p.nombre}${icon}</p>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${sc}">${st}</span>
+          </div>
+          <p class="text-[10px] text-gray-400"><i class="fa-solid fa-store mr-0.5"></i>${p.localComida||''}</p>
+          <p class="text-[11px] text-gray-500 mt-0.5 line-clamp-1">${p.descripcion||''}</p>
+          <p class="text-blue-600 font-bold text-base mt-1">$${Number(p.precio).toFixed(2)}</p>
+        </div>
+        <button onclick='event.stopPropagation();abrirModalProducto(${JSON.stringify(p).replace(/'/g,"&#39;")})' class="ml-3 mr-3 bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-blue-700 transition flex-shrink-0">
+          <i class="fa-solid fa-cart-plus mr-1"></i>Agregar
+        </button>
+      </div>`;
+    }
+    return `<div class="bg-gradient-to-br from-white to-blue-50/40 border border-blue-100 rounded-2xl overflow-hidden flex flex-col card-tap cursor-pointer shadow-sm hover:shadow-md transition-all" onclick="verLocal('${p.localComidaId}')">
+      ${p.tieneImagen?`<img src="${imgUrl('producto',p.id)}" class="w-full h-24 object-cover" onerror="this.style.display='none'">`:''}
+      <div class="p-3 flex flex-col flex-1">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${sc}">${st}</span>
+        </div>
+        <p class="font-semibold text-xs text-gray-800 leading-tight line-clamp-2 flex-1 min-h-[2rem]">${p.nombre}${icon}</p>
+        <p class="text-[10px] text-gray-400 mt-1 truncate"><i class="fa-solid fa-store mr-0.5"></i>${p.localComida||''}</p>
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-blue-600 font-bold text-base">$${Number(p.precio).toFixed(2)}</span>
+        </div>
+        <button onclick='event.stopPropagation();abrirModalProducto(${JSON.stringify(p).replace(/'/g,"&#39;")})' class="mt-2.5 w-full bg-blue-600 text-white py-2 rounded-xl text-[11px] font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-1">
+          <i class="fa-solid fa-cart-plus"></i>Agregar
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function verLocal(localId){
+  const local=state.locales.find(l=>l.id===localId);
+  if(!local)return;
+  state.localActual=local;
+  document.getElementById('local-det-nombre').textContent=local.nombre;
+  document.getElementById('local-det-info').innerHTML=`<i class="fa-solid fa-location-dot mr-1"></i>${local.ubicacion} · <i class="fa-regular fa-clock mr-1"></i>${local.horario||'Sin horario'}`;
+  const prods=state.productos.filter(p=>p.localComida===local.nombre);
+  const container=document.getElementById('local-det-productos');
+  if(prods.length===0){container.innerHTML='<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-box-open text-4xl mb-2"></i><p>Sin productos aún</p></div>';}
+  else{container.innerHTML=prods.map(p=>{
+    const sc=p.stock>10?'badge-stock-ok':p.stock>0?'badge-stock-low':'badge-stock-out';
+    const st=p.stock>10?`${p.stock} disp.`:p.stock>0?`Solo ${p.stock}`:'Agotado';
+    const disabled=p.stock===0?'opacity-50 pointer-events-none':'';
+    const icon=p.permitePersonalizacion?'<i class="fa-solid fa-pencil text-purple-500 text-xs ml-1" title="Personalizable"></i>':'';
+    return `<div class="bg-white border border-gray-100 rounded-xl p-3 flex items-center gap-3 ${disabled}">
+      ${p.tieneImagen?`<img src="${imgUrl('producto',p.id)}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`:''}
+      <div class="flex-1 min-w-0"><p class="font-medium text-sm text-gray-800">${p.nombre}${icon}</p>
+        <p class="text-xs text-gray-500 line-clamp-1">${p.descripcion||''}</p>
+        <div class="flex items-center gap-2 mt-1"><p class="text-blue-600 font-bold">$${Number(p.precio).toFixed(2)}</p>
+        <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold ${sc}">${st}</span></div></div>
+      <button onclick='abrirModalProducto(${JSON.stringify(p).replace(/'/g,"&#39;")})' class="ml-1 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition flex-shrink-0"><i class="fa-solid fa-plus mr-1"></i>Agregar</button></div>`;
+  }).join('');}
+  mostrarVista('local');
+}
+
+// ==================== CARRITO ====================
+function persistirCarrito(){if(state.user)localStorage.setItem('uambite_cart_'+state.user.id,JSON.stringify(state.cart));}
+function actualizarBadge(){const c=state.cart.reduce((s,i)=>s+i.cantidad,0);const el=document.getElementById('cart-count');el.textContent=c;el.classList.toggle('hidden',c===0);}
+
+async function aplicarDescuento(){
+  const codigo=document.getElementById('cart-codigo-desc').value.trim();
+  if(!codigo){Swal.fire({icon:'warning',title:'Ingresa un código'});return;}
+  try{
+    const descuentos=await apiCall('GET','/descuento/all',null,false);
+    const d=descuentos.find(d=>d.codigo===codigo);
+    if(!d)throw new Error('Código no encontrado');
+    if(!d.activo)throw new Error('Descuento inactivo');
+    if(d.fechaVencimiento&&new Date(d.fechaVencimiento)<new Date())throw new Error('Descuento vencido');
+    state.descuentoAplicado={id:d.id,codigo:d.codigo,porcentaje:d.porcentaje};
+    Swal.fire({icon:'success',title:'Descuento aplicado',text:`${d.porcentaje}% de descuento`,timer:1500,showConfirmButton:false});
+    renderCart();
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+function renderCart(){
+  const ci=document.getElementById('cart-items'),cf=document.getElementById('cart-footer'),ce=document.getElementById('cart-empty');
+  if(state.cart.length===0){ci.innerHTML='';cf.classList.add('hidden');ce.classList.remove('hidden');return;}
+  ce.classList.add('hidden');cf.classList.remove('hidden');
+  const subtotal=state.cart.reduce((s,i)=>s+i.precioUnitario*i.cantidad,0);
+  let desc=0,porc=0;
+  if(state.descuentoAplicado){porc=Number(state.descuentoAplicado.porcentaje);desc=subtotal*porc/100;}
+  const total=subtotal-desc;
+  document.getElementById('cart-subtotal').textContent='$'+subtotal.toFixed(2);
+  document.getElementById('cart-total').textContent='$'+total.toFixed(2);
+  const dr=document.getElementById('cart-descuento-row'),dv=document.getElementById('cart-descuento-val');
+  if(state.descuentoAplicado){dr.classList.remove('hidden');dv.textContent='-$'+desc.toFixed(2)+' ('+porc+'%)';}
+  else{dr.classList.add('hidden');}
+  ci.innerHTML=state.cart.map((item,idx)=>`
+    <div class="bg-gray-50 rounded-xl px-3 py-3">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0"><p class="font-medium text-sm text-gray-800 truncate">${item.nombre}</p>
+          <p class="text-xs text-gray-500">$${Number(item.precioUnitario).toFixed(2)} c/u — ${item.localNombre}</p>
+          ${item.extrasNombres&&item.extrasNombres.length>0?`<p class="text-xs text-purple-600 mt-1">+ ${item.extrasNombres.join(', ')}</p>`:''}</div>
+        <div class="flex items-center gap-1 flex-shrink-0 ml-2">
+          <button onclick="cambiarCantidad(${idx},-1)" class="w-7 h-7 rounded-full bg-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-300">−</button>
+          <span class="w-5 text-center font-semibold text-sm">${item.cantidad}</span>
+          <button onclick="cambiarCantidad(${idx},1)" class="w-7 h-7 rounded-full bg-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-300">+</button>
+          <button onclick="removerDelCarrito(${idx})" class="ml-1 text-red-500 hover:text-red-700"><i class="fa-solid fa-trash text-xs"></i></button></div></div></div>`).join('');
+  cargarFranjas();
+}
+
+function cambiarCantidad(idx,d){state.cart[idx].cantidad+=d;if(state.cart[idx].cantidad<=0)state.cart.splice(idx,1);persistirCarrito();actualizarBadge();renderCart();}
+function removerDelCarrito(idx){state.cart.splice(idx,1);persistirCarrito();actualizarBadge();renderCart();}
+
+async function cargarFranjas(){
+  try{
+    state.franjas=await apiCall('GET','/franja/disponibles',null,false);
+    const sel=document.getElementById('cart-franja');
+    sel.innerHTML='<option value="">Sin franja — pedir ya</option>'+state.franjas.map(f=>`<option value="${f.id}">${f.horaInicio}-${f.horaFin} (${f.pedidosActuales}/${f.capacidadMaxima}) — ${f.localComida||''}</option>`).join('');
+  }catch(err){}
+}
+
+// ==================== CHECKOUT ====================
+document.getElementById('btn-checkout').addEventListener('click',async()=>{
+  const franjaId=document.getElementById('cart-franja').value,tipo=document.getElementById('cart-tipo-entrega').value,metodo=document.getElementById('cart-metodo-pago').value;
+  if(state.cart.length===0){Swal.fire({icon:'warning',title:'Carrito vacío'});return;}
+  try{
+    Swal.fire({title:'Procesando pedido...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+    const pedido=await apiCall('POST','/pedido/save',{tipoEntrega:tipo,usuarioId:state.user.id,franjaHorariaId:franjaId||null,descuentoId:state.descuentoAplicado?state.descuentoAplicado.id:null});
+    for(const item of state.cart){await apiCall('POST','/detallepedido/save',{pedidoId:pedido.id,productoId:item.productoId,cantidad:item.cantidad,ingredientesExtraIds:item.ingredientesExtraIds||[]});}
+    await apiCall('POST','/pago/save',{metodoPago:metodo,pedidoId:pedido.id});
+    state.cart=[];state.descuentoAplicado=null;persistirCarrito();actualizarBadge();
+    Swal.fire({icon:'success',title:'Pedido creado!',text:'Tu pedido ha sido registrado.',confirmButtonText:'Ver mis pedidos'}).then(r=>{if(r.isConfirmed)mostrarVista('orders');});
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+});
+
+// ==================== MIS PEDIDOS ====================
+async function cargarPedidos(){
+  try{
+    const pedidos=await apiCall('GET','/pedido/mios');
+    const c=document.getElementById('orders-container');
+    if(!pedidos||pedidos.length===0){c.innerHTML='<div class="text-center text-gray-400 py-10"><i class="fa-solid fa-inbox text-5xl mb-3"></i><p>No tienes pedidos aún</p></div>';return;}
+    c.innerHTML=pedidos.map(p=>{
+      const color={PENDIENTE:'bg-yellow-100 text-yellow-800',CONFIRMADO:'bg-blue-100 text-blue-800',EN_PREPARACION:'bg-purple-100 text-purple-800',LISTO:'bg-green-100 text-green-800',EN_CAMINO:'bg-orange-100 text-orange-800',ENTREGADO:'bg-green-200 text-green-900',CANCELADO:'bg-red-100 text-red-800'}[p.estado]||'bg-gray-100';
+      const dt=p.detalles?p.detalles.map(d=>`<li class="text-xs text-gray-600">${d.cantidad}x ${d.producto} — $${Number(d.subtotal).toFixed(2)}</li>`).join(''):'';
+      const pagoInfo=p.pago?`<div class="mt-2 flex gap-2 text-xs"><span class="px-1.5 py-0.5 rounded-full ${p.pago.estado==='PAGADO'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${p.pago.estado}</span><span class="text-gray-500">${p.pago.metodoPago}</span></div>`:'';
+      const entregaInfo=p.entrega?`<div class="mt-1 flex gap-2 text-xs"><span class="px-1.5 py-0.5 rounded-full ${p.entrega.estado==='ENTREGADA'?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}">${p.entrega.estado}</span><span class="text-gray-500">${p.entrega.ubicacion||''}</span></div>`:'';
+      return `<div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+        <div class="flex justify-between items-center mb-2"><span class="text-xs text-gray-400">${p.createdAt?new Date(p.createdAt).toLocaleString():''}</span><span class="px-2 py-1 rounded-full text-xs font-semibold ${color}">${p.estado}</span></div>
+        <p class="font-bold text-lg text-gray-800">$${Number(p.total).toFixed(2)}</p>
+        <p class="text-xs text-gray-500">${p.tipoEntrega==='RETIRO_LOCAL'?'Retiro en local':'Entrega interna'} · Prioridad ${p.prioridad||0}</p>
+        ${p.descuentoAplicado>0?`<p class="text-xs text-green-600 mt-1">Descuento: -$${Number(p.descuentoAplicado).toFixed(2)}</p>`:''}
+        ${pagoInfo}${entregaInfo}${dt?`<ul class="mt-2 space-y-1">${dt}</ul>`:''}
+        ${p.estado==='PENDIENTE'?`<button onclick="cancelarPedido('${p.id}')" class="mt-2 text-red-600 text-sm font-medium hover:underline"><i class="fa-solid fa-ban mr-1"></i>Cancelar</button>`:''}
+        ${p.estado==='LISTO'&&p.tipoEntrega==='RETIRO_LOCAL'?`<button onclick="confirmarRetiro('${p.id}')" class="mt-2 w-full bg-green-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition"><i class="fa-solid fa-box-open mr-2"></i>Confirmar Retiro</button>`:''}
+        ${['PENDIENTE','CANCELADO','ENTREGADO'].includes(p.estado)?`<button onclick="eliminarPedido('${p.id}')" class="mt-1 text-gray-400 text-xs hover:text-red-500"><i class="fa-solid fa-xmark mr-1"></i>Eliminar</button>`:''}</div>`;
+    }).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cancelarPedido(id){
+  const r=await Swal.fire({title:'Cancelar pedido?',text:'Esta acción no se puede deshacer.',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, cancelar',cancelButtonText:'No'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('PUT',`/pedido/${id}/estado`,{estado:'CANCELADO'});Swal.fire({icon:'success',title:'Pedido cancelado'});cargarPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function confirmarRetiro(id){
+  const r=await Swal.fire({title:'Confirmar retiro?',text:'Confirmas que ya retiraste tu pedido del local.',icon:'question',showCancelButton:true,confirmButtonText:'Sí, ya lo retiré',cancelButtonText:'Cancelar'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('PUT',`/pedido/${id}/estado`,{estado:'ENTREGADO'});Swal.fire({icon:'success',title:'Pedido entregado!',timer:1500,showConfirmButton:false});cargarPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function eliminarPedido(id){
+  const r=await Swal.fire({title:'Eliminar pedido?',text:'Esta acción no se puede deshacer.',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, eliminar',confirmButtonColor:'#ef4444'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('DELETE',`/pedido/delete/${id}`);Swal.fire({icon:'success',title:'Pedido eliminado',timer:1000,showConfirmButton:false});cargarPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function limpiarHistorial(){
+  try{
+    const pedidos=await apiCall('GET','/pedido/mios');
+    const borrables=pedidos.filter(p=>['CANCELADO','ENTREGADO'].includes(p.estado));
+    if(borrables.length===0){Swal.fire({icon:'info',title:'Nada que limpiar',text:'No hay pedidos cancelados o entregados.'});return;}
+    const r=await Swal.fire({title:`Limpiar historial?`,text:`Se eliminarán ${borrables.length} pedido(s) cancelados/entregados.`,icon:'question',showCancelButton:true,confirmButtonText:'Sí, limpiar',confirmButtonColor:'#ef4444'});
+    if(!r.isConfirmed)return;
+    for(const p of borrables){await apiCall('DELETE',`/pedido/delete/${p.id}`).catch(()=>{});}
+    Swal.fire({icon:'success',title:'Historial limpio!',timer:1500,showConfirmButton:false});cargarPedidos();
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+// ==================== PERFIL ====================
+async function cargarPerfil(){
+  try{
+    const u=await apiCall('GET',`/usuario/${state.user.id}`);
+    document.getElementById('profile-content').innerHTML=`
+      <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center gap-3"><div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center"><i class="fa-solid fa-user text-2xl text-blue-600"></i></div><div><p class="font-bold text-lg">${u.nombre} ${u.apellido}</p><p class="text-xs text-gray-500">${u.carnet} · <span class="font-semibold">${u.rol}</span></p></div></div>
+        <div class="space-y-2"><input id="pf-nombre" class="w-full px-3 py-2 border rounded-lg text-sm" value="${u.nombre||''}" placeholder="Nombre"><input id="pf-apellido" class="w-full px-3 py-2 border rounded-lg text-sm" value="${u.apellido||''}" placeholder="Apellido"><input id="pf-correo" class="w-full px-3 py-2 border rounded-lg text-sm" value="${u.correo||''}" placeholder="Correo"><input id="pf-password" type="password" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Nueva contraseña (dejar vacío para no cambiar)"></div>
+        <button onclick="guardarPerfil()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar Cambios</button>
+      </div>`;
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function guardarPerfil(){
+  try{
+    const body={nombre:val('pf-nombre'),apellido:val('pf-apellido'),correo:val('pf-correo'),carnet:state.user.carnet,rol:state.user.rol};
+    const pw=val('pf-password');if(pw)body.password=pw;
+    const u=await apiCall('PUT',`/usuario/update/${state.user.id}`,body);
+    state.user={...state.user,nombre:u.nombre,apellido:u.apellido,correo:u.correo};
+    localStorage.setItem('uambite_user',JSON.stringify(state.user));
+    Swal.fire({icon:'success',title:'Perfil actualizado!',timer:1500,showConfirmButton:false});
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+// ==================== ADMIN ====================
+function resetAdminTabs(){['pedidos','usuarios','locales','productos','franjas','descuentos','ingredientes'].forEach(t=>document.getElementById('tab-admin-'+t).className='px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0 text-xs');}
+function activarTab(t){resetAdminTabs();document.getElementById('tab-admin-'+t).className='px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium transition flex-shrink-0 text-xs';}
+
+async function cargarAdminPedidos(){activarTab('pedidos');
+  try{const pedidos=await apiCall('GET','/pedido/all');const c=document.getElementById('admin-content');
+    if(!pedidos||pedidos.length===0){c.innerHTML='<p class="text-gray-400 text-center py-10">No hay pedidos</p>';return;}
+    const color={PENDIENTE:'bg-yellow-100 text-yellow-800',CONFIRMADO:'bg-blue-100 text-blue-800',EN_PREPARACION:'bg-purple-100 text-purple-800',LISTO:'bg-green-100 text-green-800',EN_CAMINO:'bg-orange-100 text-orange-800',ENTREGADO:'bg-green-200 text-green-900',CANCELADO:'bg-red-100 text-red-800'};
+    c.innerHTML=pedidos.map(p=>{
+      const dt=p.detalles?p.detalles.map(d=>`<li class="text-xs text-gray-600">${d.cantidad}x ${d.producto} — $${Number(d.subtotal).toFixed(2)}</li>`).join(''):'';
+      const btns=[];if(p.estado==='PENDIENTE')btns.push(`<button onclick="adminTransicion('${p.id}','CONFIRMADO')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">Confirmar</button>`);
+      if(p.estado==='CONFIRMADO')btns.push(`<button onclick="adminTransicion('${p.id}','EN_PREPARACION')" class="bg-purple-600 text-white px-2 py-1 rounded text-xs">Preparar</button>`);
+      if(p.estado==='EN_PREPARACION')btns.push(`<button onclick="adminTransicion('${p.id}','LISTO')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Listo</button>`);
+      if(['PENDIENTE','CONFIRMADO','EN_PREPARACION'].includes(p.estado))btns.push(`<button onclick="adminTransicion('${p.id}','CANCELADO')" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Cancelar</button>`);
+      if(p.estado==='LISTO'&&p.pago&&p.pago.estado==='PAGADO'&&p.tipoEntrega==='ENTREGA_INTERNA')btns.push(`<button onclick="adminCrearEntrega('${p.id}')" class="bg-orange-600 text-white px-2 py-1 rounded text-xs">Crear Entrega</button>`);
+      if(p.estado==='EN_CAMINO'&&p.entrega)btns.push(`<button onclick="adminFinalizarEntrega('${p.entrega.id}')" class="bg-teal-600 text-white px-2 py-1 rounded text-xs">Finalizar Entrega</button>`);
+      const prioHtml=`<div class="flex items-center gap-1 mt-1 text-xs"><span class="text-gray-500">Prioridad:</span><button onclick="adminSetPrioridad('${p.id}',${(p.prioridad||0)-1})" class="w-5 h-5 rounded bg-gray-200 text-gray-600 font-bold">−</button><span class="w-5 text-center font-semibold">${p.prioridad||0}</span><button onclick="adminSetPrioridad('${p.id}',${(p.prioridad||0)+1})" class="w-5 h-5 rounded bg-gray-200 text-gray-600 font-bold">+</button></div>`;
+      const pagoInfo=p.pago?`<span class="text-xs ml-2 px-1.5 py-0.5 rounded-full ${p.pago.estado==='PAGADO'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${p.pago.metodoPago} ${p.pago.estado}</span>`:'';
+      return `<div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"><div class="flex justify-between items-center mb-2"><span class="text-xs text-gray-500 font-mono">${p.id?p.id.substring(0,8):''}...${pagoInfo}</span><span class="px-2 py-1 rounded-full text-xs font-semibold ${color[p.estado]||'bg-gray-100'}">${p.estado}</span></div>
+        <p class="text-sm"><span class="font-medium">Cliente:</span> ${p.usuario||'—'}</p><p class="font-bold text-lg text-gray-800">$${Number(p.total).toFixed(2)}</p>
+        <p class="text-xs text-gray-500">${prioHtml} | ${p.tipoEntrega||'—'}</p>${dt?`<ul class="mt-2 space-y-1">${dt}</ul>`:''}${btns.length?`<div class="flex gap-2 mt-3 flex-wrap">${btns.join('')}</div>`:''}</div>`;
+    }).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function adminTransicion(pid,estado){try{await apiCall('PUT',`/pedido/${pid}/estado`,{estado});Swal.fire({icon:'success',title:`Pedido → ${estado}`,timer:1000,showConfirmButton:false});cargarAdminPedidos();}catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}}
+
+async function adminSetPrioridad(pid,p){try{await apiCall('PUT',`/pedido/${pid}/prioridad`,{prioridad:Math.max(0,p)});cargarAdminPedidos();}catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}}
+
+async function adminCrearEntrega(pid){
+  const{value:ubicacion}=await Swal.fire({title:'Crear Entrega',input:'text',inputLabel:'Ubicación',inputPlaceholder:'ej: Recepción Edificio A',showCancelButton:true,confirmButtonText:'Crear'});
+  if(!ubicacion)return;
+  try{await apiCall('POST','/entrega/save',{pedidoId:pid,ubicacion});Swal.fire({icon:'success',title:'Entrega creada',text:'Pedido → EN_CAMINO',timer:1500,showConfirmButton:false});cargarAdminPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function adminFinalizarEntrega(eid){
+  try{await apiCall('PUT',`/entrega/${eid}`,{estado:'ENTREGADA'});Swal.fire({icon:'success',title:'Entrega finalizada',text:'Pedido → ENTREGADO',timer:1500,showConfirmButton:false});cargarAdminPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarAdminUsuarios(){activarTab('usuarios');
+  try{const usuarios=await apiCall('GET','/usuario/all');const c=document.getElementById('admin-content');
+    const rc={ADMIN:'bg-red-100 text-red-800',LOCAL:'bg-blue-100 text-blue-800',ESTUDIANTE:'bg-green-100 text-green-800',PROFESOR:'bg-purple-100 text-purple-800'};
+    c.innerHTML='<button onclick="mostrarFormAdmin(\'usuario\')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Usuario</button>'+
+      usuarios.map(u=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between"><div><p class="font-medium text-gray-800">${u.nombre} ${u.apellido}</p><p class="text-xs text-gray-500">${u.carnet} — ${u.correo||''}</p></div><span class="px-2 py-1 rounded-full text-xs font-semibold ${rc[u.rol]||'bg-gray-100'}">${u.rol}</span></div>`).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+// ==================== ADMIN CRUD ====================
+async function cargarAdminLocales(){activarTab('locales');
+  try{const locales=await apiCall('GET','/localcomida/all',null,false);const c=document.getElementById('admin-content');
+    c.innerHTML=`<button onclick="mostrarFormAdmin('local')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Local</button>`+
+      locales.map(l=>`<div class="bg-white border border-gray-200 rounded-xl p-3"><div class="flex justify-between items-center"><div class="flex items-center gap-3 flex-1 min-w-0">${l.tieneImagen?`<img src="${imgUrl('local',l.id)}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`:`<div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-store text-gray-400"></i></div>`}<div class="min-w-0"><p class="font-medium text-gray-800 truncate">${l.nombre}</p><p class="text-xs text-gray-500 truncate">${l.ubicacion} · ${l.horario||''} · Dueño: ${l.duenoId?l.duenoId.substring(0,8):'—'}</p></div></div><div class="flex items-center gap-1"><button onclick="subirImagen('local','${l.id}','${l.nombre.replace(/'/g,"\\'")}')" class="${l.tieneImagen?'text-green-500 hover:text-green-700':'text-gray-400 hover:text-gray-600'} px-1" title="${l.tieneImagen?'Reemplazar imagen':'Subir imagen'}"><i class="fa-solid fa-camera"></i></button>${l.tieneImagen?`<button onclick="eliminarImagen('local','${l.id}','${l.nombre.replace(/'/g,"\\'")}')" class="text-orange-500 hover:text-orange-700 px-1" title="Eliminar imagen"><i class="fa-solid fa-image"></i></button>`:''}<button onclick="mostrarFormAdmin('local','${l.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="asignarEncargado('${l.id}')" class="text-purple-500 hover:text-purple-700 px-1" title="Reasignar encargado"><i class="fa-solid fa-user-plus"></i></button><button onclick="eliminarEntidad('localcomida','${l.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div></div>`).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarAdminProductos(porLocalId=null){
+  activarTab('productos');
+  try{
+    if(porLocalId){
+      const prods=state.productos.length>0?state.productos:await apiCall('GET','/producto/all',null,false);
+      const local=state.locales.find(l=>l.id===porLocalId)||{nombre:'Local',id:porLocalId};
+      const prodsLocal=prods.filter(p=>p.localComida===local.nombre);
+      const c=document.getElementById('admin-content');
+      c.innerHTML=`<button onclick="cargarAdminProductos()" class="text-blue-600 text-sm mb-3"><i class="fa-solid fa-arrow-left mr-1"></i>Volver a locales</button>
+        <div class="flex justify-between items-center mb-3"><h3 class="font-bold text-gray-800 text-lg"><i class="fa-solid fa-store text-blue-500 mr-2"></i>${local.nombre}</h3>
+        <span class="text-xs text-gray-400">${prodsLocal.length} producto${prodsLocal.length!==1?'s':''}</span></div>
+        <button onclick="mostrarFormAdmin('producto',null,'${porLocalId}')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Producto en ${local.nombre}</button>`+
+        (prodsLocal.length===0?'<p class="text-gray-400 text-center py-6">Sin productos en este local</p>':
+        prodsLocal.map(p=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div class="flex items-center gap-3 flex-1 min-w-0">${p.tieneImagen?`<img src="${imgUrl('producto',p.id)}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`:`<div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-burger text-gray-400 text-sm"></i></div>`}<div class="min-w-0"><p class="font-medium text-gray-800 text-sm truncate">${p.nombre}</p><p class="text-xs text-gray-500 truncate">$${Number(p.precio).toFixed(2)} · Stock: ${p.stock} ${p.permitePersonalizacion?'· Personalizable':''}</p></div></div><div class="flex items-center gap-1"><button onclick="subirImagen('producto','${p.id}','${p.nombre.replace(/'/g,"\\'")}')" class="${p.tieneImagen?'text-green-500 hover:text-green-700':'text-gray-400 hover:text-gray-600'} px-1" title="${p.tieneImagen?'Reemplazar imagen':'Subir imagen'}"><i class="fa-solid fa-camera"></i></button>${p.tieneImagen?`<button onclick="eliminarImagen('producto','${p.id}','${p.nombre.replace(/'/g,"\\'")}')" class="text-orange-500 hover:text-orange-700 px-1" title="Eliminar imagen"><i class="fa-solid fa-image"></i></button>`:''}<button onclick="mostrarFormAdmin('producto','${p.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="vincularIngrediente('${p.id}','${p.nombre.replace(/'/g,"\\'")}')" class="text-purple-500 hover:text-purple-700 px-1"><i class="fa-solid fa-link"></i></button><button onclick="eliminarEntidad('producto','${p.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join(''));
+    }else{
+      const locales=state.locales.length>0?state.locales:await apiCall('GET','/localcomida/all',null,false);
+      const prods=state.productos.length>0?state.productos:await apiCall('GET','/producto/all',null,false);
+      state.locales=locales;state.productos=prods;
+      const c=document.getElementById('admin-content');
+      c.innerHTML=`<button onclick="mostrarFormAdmin('producto')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Producto</button>`+
+        locales.map(l=>{
+          const count=prods.filter(p=>p.localComida===l.nombre).length;
+          return `<div class="bg-white border border-gray-200 rounded-xl p-3 cursor-pointer card-tap" onclick="cargarAdminProductos('${l.id}')">
+            <div class="flex justify-between items-center"><div><p class="font-medium text-gray-800"><i class="fa-solid fa-store text-blue-500 mr-2"></i>${l.nombre}</p><p class="text-xs text-gray-500">${l.ubicacion} · ${l.horario||''}</p></div><div class="flex items-center gap-2"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs">${count} producto${count!==1?'s':''}</span><i class="fa-solid fa-chevron-right text-gray-300"></i></div></div></div>`;
+        }).join('');
+    }
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarAdminFranjas(){activarTab('franjas');
+  try{const franjas=await apiCall('GET','/franja/all',null,false);const c=document.getElementById('admin-content');
+    c.innerHTML=`<button onclick="mostrarFormAdmin('franja')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nueva Franja</button>`+
+      franjas.map(f=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div><p class="font-medium text-gray-800">${f.horaInicio} - ${f.horaFin} <span class="text-xs text-gray-400">${f.localComida||''}</span></p><p class="text-xs ${f.disponible?'text-green-600':'text-red-600'}">${f.pedidosActuales}/${f.capacidadMaxima} · ${f.disponible?'Disponible':'Llena'}</p></div><div class="flex items-center gap-1"><button onclick="mostrarFormAdmin('franja','${f.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarEntidad('franja','${f.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarAdminDescuentos(){activarTab('descuentos');
+  try{const desc=await apiCall('GET','/descuento/all',null,false);const c=document.getElementById('admin-content');
+    c.innerHTML=`<button onclick="mostrarFormAdmin('descuento')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Descuento</button>`+
+      desc.map(d=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div><p class="font-medium text-gray-800">${d.codigo} <span class="text-sm text-green-600">${d.porcentaje}%</span></p><p class="text-xs text-gray-500">Vence: ${d.fechaVencimiento||'—'} · ${d.activo?'<span class=\"text-green-600\">Activo</span>':'<span class=\"text-red-600\">Inactivo</span>'} · ${d.localComida||'Global'}</p></div><div class="flex items-center gap-1"><button onclick="mostrarFormAdmin('descuento','${d.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarEntidad('descuento','${d.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarAdminIngredientes(){activarTab('ingredientes');
+  try{const ings=await apiCall('GET','/ingredienteextra/all',null,false);const c=document.getElementById('admin-content');
+    c.innerHTML=`<button onclick="mostrarFormAdmin('ingrediente')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Ingrediente</button>`+
+      ings.map(i=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div class="flex items-center gap-3 flex-1 min-w-0">${i.tieneImagen?`<img src="${imgUrl('ingrediente',i.id)}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`:`<div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-pepper-hot text-gray-400 text-sm"></i></div>`}<div class="min-w-0"><p class="font-medium text-gray-800 truncate">${i.nombre}</p><p class="text-xs text-blue-600">+$${Number(i.precioExtra).toFixed(2)}</p></div></div><div class="flex items-center gap-1"><button onclick="subirImagen('ingrediente','${i.id}','${i.nombre.replace(/'/g,"\\'")}')" class="${i.tieneImagen?'text-green-500 hover:text-green-700':'text-gray-400 hover:text-gray-600'} px-1" title="${i.tieneImagen?'Reemplazar imagen':'Subir imagen'}"><i class="fa-solid fa-camera"></i></button>${i.tieneImagen?`<button onclick="eliminarImagen('ingrediente','${i.id}','${i.nombre.replace(/'/g,"\\'")}')" class="text-orange-500 hover:text-orange-700 px-1" title="Eliminar imagen"><i class="fa-solid fa-image"></i></button>`:''}<button onclick="mostrarFormAdmin('ingrediente','${i.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarEntidad('ingredienteextra','${i.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function eliminarEntidad(tipo,id){
+  const r=await Swal.fire({title:'Eliminar?',text:'Esta acción no se puede deshacer.',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, eliminar'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('DELETE',`/${tipo}/delete/${id}`);Swal.fire({icon:'success',title:'Eliminado',timer:1000,showConfirmButton:false});
+    const fn={localcomida:cargarAdminLocales,producto:()=>cargarAdminProductos(),franja:cargarAdminFranjas,descuento:cargarAdminDescuentos,ingredienteextra:cargarAdminIngredientes}[tipo];if(fn)fn();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function mostrarFormAdmin(tipo,editId=null,localId=null){
+  const editMode=!!editId;
+  let existing=null;
+  if(editMode){
+    const paths={local:'/localcomida',producto:'/producto',franja:'/franja',descuento:'/descuento',ingrediente:'/ingredienteextra'};
+    if(paths[tipo])existing=await apiCall('GET',`${paths[tipo]}/${editId}`,null,true).catch(()=>null);
+  }
+  const titulos={local:editMode?'Editar Local':'Nuevo Local + Encargado',producto:editMode?'Editar Producto':'Nuevo Producto',franja:editMode?'Editar Franja Horaria':'Nueva Franja Horaria',descuento:editMode?'Editar Descuento':'Nuevo Descuento',ingrediente:editMode?'Editar Ingrediente Extra':'Nuevo Ingrediente Extra',usuario:'Nuevo Usuario'};
+  const btnText=editMode?'Guardar Cambios':'Crear';
+  let html='';
+  if(tipo==='local'){
+    const locales=state.locales.length>0?state.locales:await apiCall('GET','/localcomida/all',null,false);
+    html=`<input id="af-local-nombre" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Nombre del local" value="${existing?existing.nombre||'':''}">
+      <input id="af-local-ubicacion" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Ubicación" value="${existing?existing.ubicacion||'':''}">
+      <input id="af-local-horario" class="w-full px-3 py-2 border rounded-lg text-sm mb-3" placeholder="Horario" value="${existing?existing.horario||'':''}">
+      ${editMode?'':'<p class="text-xs font-medium text-gray-500 mb-1">Encargado:</p><input id="af-enc-carnet" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Carnet"><input id="af-enc-nombre" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Nombre"><input id="af-enc-apellido" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Apellido"><input id="af-enc-correo" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Correo"><input id="af-enc-password" type="password" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Contraseña">'}`;
+  }else if(tipo==='producto'){
+    let locales=state.locales.length>0?state.locales:await apiCall('GET','/localcomida/all',null,false);
+    const esLocal=state.user&&state.user.rol==='LOCAL';
+    if(esLocal)locales=locales.filter(l=>l.duenoId===state.user.id);
+    if(!editMode&&esLocal&&locales.length===1){
+      html=`<input type="hidden" id="af-prod-local" value="${locales[0].id}"><p class="text-sm text-gray-500 mb-2"><i class="fa-solid fa-store mr-1"></i>${locales[0].nombre}</p>`;
+    }else{
+      html=`<select id="af-prod-local" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 bg-white">${locales.map(l=>`<option value="${l.id}" ${existing&&existing.localComida===l.nombre?'selected':!existing&&localId===l.id?'selected':''}>${l.nombre}</option>`).join('')}</select>`;
+    }
+    html+=`<input id="af-prod-nombre" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Nombre" value="${existing?existing.nombre||'':''}">
+      <input id="af-prod-desc" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Descripción" value="${existing?existing.descripcion||'':''}">
+      <input id="af-prod-precio" type="number" step="0.01" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Precio" value="${existing?existing.precio||'':''}">
+      <input id="af-prod-stock" type="number" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Stock" value="${existing?existing.stock||'':''}">
+      <label class="flex items-center gap-2 text-sm text-gray-600"><input id="af-prod-personaliza" type="checkbox" class="w-4 h-4" ${existing&&existing.permitePersonalizacion?'checked':''}> Permite personalización</label>`;
+  }else if(tipo==='franja'){
+    let locales=state.locales.length>0?state.locales:await apiCall('GET','/localcomida/all',null,false);
+    const esLocal=state.user&&state.user.rol==='LOCAL';
+    if(esLocal)locales=locales.filter(l=>l.duenoId===state.user.id);
+    if(!editMode&&esLocal&&locales.length===1){
+      html=`<input type="hidden" id="af-franja-local" value="${locales[0].id}"><p class="text-sm text-gray-500 mb-2"><i class="fa-solid fa-store mr-1"></i>${locales[0].nombre}</p>`;
+    }else{
+      html=`<select id="af-franja-local" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 bg-white">${locales.map(l=>`<option value="${l.id}">${l.nombre}</option>`).join('')}</select>`;
+    }
+    html+=`<input id="af-franja-inicio" type="time" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" value="${existing?existing.horaInicio||'':''}">
+      <input id="af-franja-fin" type="time" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" value="${existing?existing.horaFin||'':''}">
+      <input id="af-franja-cap" type="number" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Capacidad máxima" value="${existing?existing.capacidadMaxima||'':''}">
+      ${editMode?`<label class="flex items-center gap-2 text-sm text-gray-600"><input id="af-franja-disp" type="checkbox" class="w-4 h-4" ${existing&&existing.disponible?'checked':''}> Disponible</label>`:''}`;
+  }else if(tipo==='descuento'){
+    let locales=state.locales.length>0?state.locales:await apiCall('GET','/localcomida/all',null,false);
+    const esLocal=state.user&&state.user.rol==='LOCAL';
+    if(esLocal)locales=locales.filter(l=>l.duenoId===state.user.id);
+    html=`<input id="af-desc-codigo" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Código" value="${existing?existing.codigo||'':''}">
+      <input id="af-desc-porc" type="number" step="0.01" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Porcentaje" value="${existing?existing.porcentaje||'':''}">
+      <input id="af-desc-venc" type="date" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" value="${existing?existing.fechaVencimiento||'':''}">`;
+    if(esLocal&&locales.length===1&&!editMode){
+      html+=`<input type="hidden" id="af-desc-local" value="${locales[0].id}"><p class="text-sm text-gray-500 mb-2"><i class="fa-solid fa-store mr-1"></i>${locales[0].nombre}</p>`;
+    }else{
+      html+=`<select id="af-desc-local" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 bg-white"><option value="">Global (sin local)</option>${locales.map(l=>`<option value="${l.id}">${l.nombre}</option>`).join('')}</select>`;
+    }
+    if(editMode)html+=`<label class="flex items-center gap-2 text-sm text-gray-600"><input id="af-desc-activo" type="checkbox" class="w-4 h-4" ${existing&&existing.activo?'checked':''}> Activo</label>`;
+  }else if(tipo==='ingrediente'){
+    html=`<input id="af-ing-nombre" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Nombre" value="${existing?existing.nombre||'':''}">
+      <input id="af-ing-precio" type="number" step="0.01" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Precio extra" value="${existing?existing.precioExtra||'':''}">`;
+  }
+  const r=await Swal.fire({title:titulos[tipo],html,customClass:{popup:'rounded-2xl',container:'text-left'},showCancelButton:true,confirmButtonText:btnText,cancelButtonText:'Cancelar',preConfirm:()=>{return{}}});
+  if(!r.isConfirmed)return;
+  try{
+    if(editMode)await editarEntidad(tipo,editId);else await crearEntidad(tipo);
+    Swal.fire({icon:'success',title:editMode?'Actualizado!':'Creado!',timer:1000,showConfirmButton:false});
+    const fn={local:cargarAdminLocales,producto:()=>cargarAdminProductos(),franja:cargarAdminFranjas,descuento:cargarAdminDescuentos,ingrediente:cargarAdminIngredientes}[tipo];if(fn)fn();
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function editarEntidad(tipo,id){
+  if(tipo==='local'){await apiCall('PUT',`/localcomida/update/${id}`,{nombre:val('af-local-nombre'),ubicacion:val('af-local-ubicacion'),horario:val('af-local-horario')});}
+  else if(tipo==='producto'){await apiCall('PUT',`/producto/update/${id}`,{nombre:val('af-prod-nombre'),descripcion:val('af-prod-desc'),precio:Number(val('af-prod-precio')),stock:parseInt(val('af-prod-stock')),permitePersonalizacion:document.getElementById('af-prod-personaliza').checked,localComidaId:val('af-prod-local')});}
+  else if(tipo==='franja'){const d=document.getElementById('af-franja-disp');await apiCall('PUT',`/franja/update/${id}`,{horaInicio:val('af-franja-inicio'),horaFin:val('af-franja-fin'),capacidadMaxima:parseInt(val('af-franja-cap')),disponible:d?d.checked:true,localComidaId:val('af-franja-local')});}
+  else if(tipo==='descuento'){const a=document.getElementById('af-desc-activo');await apiCall('PUT',`/descuento/update/${id}`,{codigo:val('af-desc-codigo'),porcentaje:Number(val('af-desc-porc')),fechaVencimiento:val('af-desc-venc'),activo:a?a.checked:true,localComidaId:val('af-desc-local')||null});}
+  else if(tipo==='ingrediente'){await apiCall('PUT',`/ingredienteextra/update/${id}`,{nombre:val('af-ing-nombre'),precioExtra:Number(val('af-ing-precio'))});}
+}
+
+async function asignarEncargado(localId){
+  const html=`<input id="ae-carnet" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Carnet del encargado">
+    <input id="ae-nombre" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Nombre">
+    <input id="ae-apellido" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Apellido">
+    <input id="ae-correo" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Correo">
+    <input id="ae-password" type="password" class="w-full px-3 py-2 border rounded-lg text-sm mb-2" placeholder="Contraseña">`;
+  const r=await Swal.fire({title:'Asignar/Reasignar Encargado',html,showCancelButton:true,confirmButtonText:'Asignar'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('PUT',`/localcomida/${localId}/asignar-encargado`,{carnet:val('ae-carnet'),nombre:val('ae-nombre'),apellido:val('ae-apellido'),correo:val('ae-correo'),password:val('ae-password')});Swal.fire({icon:'success',title:'Encargado asignado!',timer:1500,showConfirmButton:false});cargarAdminLocales();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function vincularIngrediente(prodId,prodNombre){
+  const ings=state.ingredientesExtra.length>0?state.ingredientesExtra:await apiCall('GET','/ingredienteextra/all',null,false);
+  if(ings.length===0){Swal.fire({icon:'warning',title:'No hay ingredientes extra. Créalos primero.'});return;}
+  const html=`<p class="text-sm text-gray-500 mb-2">Vincular a: <b>${prodNombre}</b></p><select id="vi-ing" class="w-full px-3 py-2 border rounded-lg text-sm mb-2 bg-white">${ings.map(i=>`<option value="${i.id}">${i.nombre} (+$${Number(i.precioExtra).toFixed(2)})</option>`).join('')}</select>`;
+  const r=await Swal.fire({title:'Vincular Ingrediente Extra',html,showCancelButton:true,confirmButtonText:'Vincular'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('POST','/productoingredienteextra/save',{productoId:prodId,ingredienteExtraId:val('vi-ing')});Swal.fire({icon:'success',title:'Vinculado!',timer:1000,showConfirmButton:false});cargarAdminProductos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function crearEntidad(tipo){
+  if(tipo==='local'){
+    await apiCall('POST','/localcomida/save',{nombre:val('af-local-nombre'),ubicacion:val('af-local-ubicacion'),horario:val('af-local-horario'),encargado:{carnet:val('af-enc-carnet'),nombre:val('af-enc-nombre'),apellido:val('af-enc-apellido'),correo:val('af-enc-correo'),password:val('af-enc-password')}});
+  }else if(tipo==='producto'){
+    await apiCall('POST','/producto/save',{nombre:val('af-prod-nombre'),descripcion:val('af-prod-desc'),precio:Number(val('af-prod-precio')),stock:parseInt(val('af-prod-stock')),permitePersonalizacion:document.getElementById('af-prod-personaliza').checked,localComidaId:val('af-prod-local')});
+  }else if(tipo==='franja'){
+    await apiCall('POST','/franja/save',{horaInicio:val('af-franja-inicio'),horaFin:val('af-franja-fin'),capacidadMaxima:parseInt(val('af-franja-cap')),pedidosActuales:0,disponible:true,localComidaId:val('af-franja-local')});
+  }else if(tipo==='descuento'){
+    await apiCall('POST','/descuento/save',{codigo:val('af-desc-codigo'),porcentaje:Number(val('af-desc-porc')),fechaVencimiento:val('af-desc-venc'),activo:true,localComidaId:val('af-desc-local')||null});
+  }else if(tipo==='ingrediente'){
+    await apiCall('POST','/ingredienteextra/save',{nombre:val('af-ing-nombre'),precioExtra:Number(val('af-ing-precio'))});
+  }
+}
+function val(id){const el=document.getElementById(id);return el?el.value:'';}
+
+// ==================== LOCAL ADMIN (encargado) ====================
+function resetLATabs(){['pedidos','local','productos','franjas','descuentos','ingredientes'].forEach(t=>document.getElementById('tab-la-'+t).className='px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 font-medium transition flex-shrink-0 text-xs');}
+function activarLATab(t){resetLATabs();document.getElementById('tab-la-'+t).className='px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium transition flex-shrink-0 text-xs';}
+
+async function getMisLocales(){
+  const locales=await apiCall('GET','/localcomida/all',null,false);
+  return locales.filter(l=>l.duenoId===state.user.id);
+}
+
+async function cargarMiLocal(){activarLATab('local');
+  try{
+    const misLocales=await getMisLocales();
+    const c=document.getElementById('local-admin-content');
+    if(misLocales.length===0){c.innerHTML='<p class="text-gray-400 text-center py-10">No tienes locales asignados.</p>';return;}
+    c.innerHTML=misLocales.map(l=>{
+      const safeName=l.nombre.replace(/'/g,"\\'");
+      return `<div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+        <div class="relative">
+          ${l.tieneImagen?`<img src="${imgUrl('local',l.id)}" class="w-full h-48 object-cover" onerror="this.style.display='none'">`:`<div class="w-full h-48 bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-store text-5xl text-gray-300"></i></div>`}
+          <div class="absolute top-2 right-2 flex gap-1">
+            <button onclick="subirImagen('local','${l.id}','${safeName}')" class="bg-white/90 backdrop-blur text-gray-700 hover:bg-white px-3 py-1.5 rounded-lg text-xs font-medium shadow" title="${l.tieneImagen?'Cambiar imagen':'Subir imagen'}">
+              <i class="fa-solid fa-camera mr-1"></i>${l.tieneImagen?'Cambiar':'Subir'}
+            </button>
+            ${l.tieneImagen?`<button onclick="eliminarImagen('local','${l.id}','${safeName}')" class="bg-white/90 backdrop-blur text-orange-600 hover:bg-white px-2.5 py-1.5 rounded-lg text-xs font-medium shadow" title="Quitar imagen">
+              <i class="fa-solid fa-trash"></i>
+            </button>`:''}
+          </div>
+        </div>
+        <div class="p-4 flex justify-between items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-lg text-gray-800 truncate">${l.nombre}</h3>
+            <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${l.ubicacion||'Sin ubicación'}</p>
+            <p class="text-xs text-gray-500 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${l.horario||'Sin horario'}</p>
+          </div>
+          <button onclick="mostrarFormAdmin('local','${l.id}')" class="ml-2 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0">
+            <i class="fa-solid fa-pen-to-square mr-1"></i>Editar
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarLocalPedidos(){activarLATab('pedidos');
+  try{
+    const misLocales=await getMisLocales();
+    if(misLocales.length===0){document.getElementById('local-admin-content').innerHTML='<p class="text-gray-400 text-center py-10">No tienes locales asignados.</p>';return;}
+    const pedidos=await apiCall('GET','/pedido/all');
+    const c=document.getElementById('local-admin-content');
+    const misIds=new Set(misLocales.map(l=>l.id));
+    const misPedidos=pedidos.filter(p=>p.localComidaId&&misIds.has(p.localComidaId));
+    if(misPedidos.length===0){c.innerHTML='<p class="text-gray-400 text-center py-10">No hay pedidos en tus locales.</p>';return;}
+    const color={PENDIENTE:'bg-yellow-100 text-yellow-800',CONFIRMADO:'bg-blue-100 text-blue-800',EN_PREPARACION:'bg-purple-100 text-purple-800',LISTO:'bg-green-100 text-green-800',EN_CAMINO:'bg-orange-100 text-orange-800',ENTREGADO:'bg-green-200 text-green-900',CANCELADO:'bg-red-100 text-red-800'};
+    c.innerHTML=misPedidos.map(p=>{
+      const dt=p.detalles?p.detalles.map(d=>`<li class="text-xs text-gray-600">${d.cantidad}x ${d.producto} — $${Number(d.subtotal).toFixed(2)}</li>`).join(''):'';
+      const btns=[];
+      if(p.estado==='PENDIENTE')btns.push(`<button onclick="localTransicion('${p.id}','CONFIRMADO')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">Confirmar</button>`);
+      if(p.estado==='CONFIRMADO')btns.push(`<button onclick="localTransicion('${p.id}','EN_PREPARACION')" class="bg-purple-600 text-white px-2 py-1 rounded text-xs">Preparar</button>`);
+      if(p.estado==='EN_PREPARACION')btns.push(`<button onclick="localTransicion('${p.id}','LISTO')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Listo</button>`);
+      if(['PENDIENTE','CONFIRMADO','EN_PREPARACION'].includes(p.estado))btns.push(`<button onclick="localTransicion('${p.id}','CANCELADO')" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Cancelar</button>`);
+      if(p.estado==='LISTO'&&p.pago&&p.pago.estado==='PAGADO'&&p.tipoEntrega==='ENTREGA_INTERNA')btns.push(`<button onclick="localCrearEntrega('${p.id}')" class="bg-orange-600 text-white px-2 py-1 rounded text-xs">Crear Entrega</button>`);
+      if(p.estado==='EN_CAMINO'&&p.entrega)btns.push(`<button onclick="localFinalizarEntrega('${p.entrega.id}')" class="bg-teal-600 text-white px-2 py-1 rounded text-xs">Finalizar Entrega</button>`);
+      const prioHtml=`<div class="flex items-center gap-1 mt-1 text-xs"><span class="text-gray-500">Prioridad:</span><button onclick="localSetPrioridad('${p.id}',${(p.prioridad||0)-1})" class="w-5 h-5 rounded bg-gray-200 font-bold">−</button><span class="w-5 text-center font-semibold">${p.prioridad||0}</span><button onclick="localSetPrioridad('${p.id}',${(p.prioridad||0)+1})" class="w-5 h-5 rounded bg-gray-200 font-bold">+</button></div>`;
+      const pagoInfo=p.pago?`<span class="text-xs ml-2 px-1.5 py-0.5 rounded-full ${p.pago.estado==='PAGADO'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${p.pago.metodoPago} ${p.pago.estado}</span>`:'';
+      return `<div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"><div class="flex justify-between items-center mb-2"><span class="text-xs text-gray-500 font-mono">${p.id?p.id.substring(0,8):''}...${pagoInfo}</span><span class="px-2 py-1 rounded-full text-xs font-semibold ${color[p.estado]||'bg-gray-100'}">${p.estado}</span></div>
+        <p class="text-sm"><span class="font-medium">Cliente:</span> ${p.usuario||'—'}</p><p class="font-bold text-lg text-gray-800">$${Number(p.total).toFixed(2)}</p>
+        <p class="text-xs text-gray-500">${prioHtml} | ${p.tipoEntrega||'—'}</p>${dt?`<ul class="mt-2 space-y-1">${dt}</ul>`:''}${btns.length?`<div class="flex gap-2 mt-3 flex-wrap">${btns.join('')}</div>`:''}</div>`;
+    }).join('');
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function localTransicion(pid,estado){try{await apiCall('PUT',`/pedido/${pid}/estado`,{estado});Swal.fire({icon:'success',title:`Pedido → ${estado}`,timer:1000,showConfirmButton:false});cargarLocalPedidos();}catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}}
+async function localSetPrioridad(pid,p){try{await apiCall('PUT',`/pedido/${pid}/prioridad`,{prioridad:Math.max(0,p)});cargarLocalPedidos();}catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}}
+
+async function localCrearEntrega(pid){
+  const{value:ubicacion}=await Swal.fire({title:'Crear Entrega',input:'text',inputLabel:'Ubicación',inputPlaceholder:'ej: Recepción Edificio A',showCancelButton:true,confirmButtonText:'Crear'});
+  if(!ubicacion)return;
+  try{await apiCall('POST','/entrega/save',{pedidoId:pid,ubicacion});Swal.fire({icon:'success',title:'Entrega creada',text:'Pedido → EN_CAMINO',timer:1500,showConfirmButton:false});cargarLocalPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function localFinalizarEntrega(eid){
+  try{await apiCall('PUT',`/entrega/${eid}`,{estado:'ENTREGADA'});Swal.fire({icon:'success',title:'Entrega finalizada',text:'Pedido → ENTREGADO',timer:1500,showConfirmButton:false});cargarLocalPedidos();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarLocalProductos(){activarLATab('productos');
+  try{
+    const misLocales=await getMisLocales();
+    const c=document.getElementById('local-admin-content');
+    if(misLocales.length===0){c.innerHTML='<p class="text-gray-400 text-center py-10">No tienes locales asignados.</p>';return;}
+    const prods=await apiCall('GET','/producto/all',null,false);
+    c.innerHTML='';
+    for(const local of misLocales){
+      const prodsLocal=prods.filter(p=>p.localComida===local.nombre);
+      c.innerHTML+=`<div class="mb-4"><div class="flex justify-between items-center mb-2"><h3 class="font-bold text-gray-800"><i class="fa-solid fa-store text-blue-500 mr-2"></i>${local.nombre}</h3><button onclick="mostrarFormAdmin('producto',null,'${local.id}')" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-medium"><i class="fa-solid fa-plus mr-1"></i>Nuevo</button></div>`+
+        (prodsLocal.length===0?'<p class="text-gray-400 text-xs italic pl-2">Sin productos</p>':
+        prodsLocal.map(p=>`<div class="bg-white border border-gray-200 rounded-xl p-3 mb-2 flex justify-between items-center"><div class="flex items-center gap-3 flex-1 min-w-0">${p.tieneImagen?`<img src="${imgUrl('producto',p.id)}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`:`<div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-burger text-gray-400 text-sm"></i></div>`}<div class="min-w-0"><p class="font-medium text-sm truncate">${p.nombre}</p><p class="text-xs text-gray-500 truncate">$${Number(p.precio).toFixed(2)} · Stock: ${p.stock} ${p.permitePersonalizacion?'· Personalizable':''}</p></div></div><div class="flex items-center gap-1"><button onclick="subirImagen('producto','${p.id}','${p.nombre.replace(/'/g,"\\'")}')" class="${p.tieneImagen?'text-green-500 hover:text-green-700':'text-gray-400 hover:text-gray-600'} px-1" title="${p.tieneImagen?'Reemplazar imagen':'Subir imagen'}"><i class="fa-solid fa-camera"></i></button>${p.tieneImagen?`<button onclick="eliminarImagen('producto','${p.id}','${p.nombre.replace(/'/g,"\\'")}')" class="text-orange-500 hover:text-orange-700 px-1" title="Eliminar imagen"><i class="fa-solid fa-image"></i></button>`:''}<button onclick="mostrarFormAdmin('producto','${p.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="vincularIngrediente('${p.id}','${p.nombre.replace(/'/g,"\\'")}')" class="text-purple-500 hover:text-purple-700 px-1"><i class="fa-solid fa-link"></i></button><button onclick="eliminarEntidadLocal('producto','${p.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join(''))+'</div>';
+    }
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarLocalFranjas(){activarLATab('franjas');
+  try{
+    const misLocales=await getMisLocales();
+    const c=document.getElementById('local-admin-content');
+    if(misLocales.length===0){c.innerHTML='<p class="text-gray-400 text-center py-10">No tienes locales asignados.</p>';return;}
+    const franjas=await apiCall('GET','/franja/all',null,false);
+    const misIds=new Set(misLocales.map(l=>l.nombre));
+    const misFranjas=franjas.filter(f=>f.localComida&&misIds.has(f.localComida));
+    c.innerHTML=`<button onclick="mostrarFormAdmin('franja')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nueva Franja</button>`+
+      (misFranjas.length===0?'<p class="text-gray-400 text-center py-6">Sin franjas</p>':
+      misFranjas.map(f=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div><p class="font-medium text-gray-800">${f.horaInicio} - ${f.horaFin}</p><p class="text-xs ${f.disponible?'text-green-600':'text-red-600'}">${f.pedidosActuales}/${f.capacidadMaxima} · ${f.disponible?'Disponible':'Llena'}</p></div><div class="flex items-center gap-1"><button onclick="mostrarFormAdmin('franja','${f.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarEntidadLocal('franja','${f.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join(''));
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarLocalDescuentos(){activarLATab('descuentos');
+  try{
+    const misLocales=await getMisLocales();
+    const c=document.getElementById('local-admin-content');
+    if(misLocales.length===0){c.innerHTML='<p class="text-gray-400 text-center py-10">No tienes locales asignados.</p>';return;}
+    const desc=await apiCall('GET','/descuento/all',null,false);
+    const misNombres=new Set(misLocales.map(l=>l.nombre));
+    const misDesc=desc.filter(d=>!d.localComida||misNombres.has(d.localComida));
+    c.innerHTML=`<button onclick="mostrarFormAdmin('descuento')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Descuento</button>`+
+      (misDesc.length===0?'<p class="text-gray-400 text-center py-6">Sin descuentos</p>':
+      misDesc.map(d=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div><p class="font-medium text-gray-800">${d.codigo} <span class="text-sm text-green-600">${d.porcentaje}%</span></p><p class="text-xs text-gray-500">Vence: ${d.fechaVencimiento||'—'} · ${d.activo?'<span class=\"text-green-600\">Activo</span>':'<span class=\"text-red-600\">Inactivo</span>'} · ${d.localComida||'Global'}</p></div><div class="flex items-center gap-1"><button onclick="mostrarFormAdmin('descuento','${d.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarEntidadLocal('descuento','${d.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join(''));
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function cargarLocalIngredientes(){activarLATab('ingredientes');
+  try{
+    const c=document.getElementById('local-admin-content');
+    const ings=await apiCall('GET','/ingredienteextra/all',null,false);
+    c.innerHTML=`<button onclick="mostrarFormAdmin('ingrediente')" class="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-medium mb-3"><i class="fa-solid fa-plus mr-2"></i>Nuevo Ingrediente</button>`+
+      (ings.length===0?'<p class="text-gray-400 text-center py-6">Sin ingredientes</p>':
+      ings.map(i=>`<div class="bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center"><div class="flex items-center gap-3 flex-1 min-w-0">${i.tieneImagen?`<img src="${imgUrl('ingrediente',i.id)}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" onerror="this.style.display='none'">`:`<div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-pepper-hot text-gray-400 text-sm"></i></div>`}<div class="min-w-0"><p class="font-medium text-gray-800 truncate">${i.nombre}</p><p class="text-xs text-blue-600">+$${Number(i.precioExtra).toFixed(2)}</p></div></div><div class="flex items-center gap-1"><button onclick="subirImagen('ingrediente','${i.id}','${i.nombre.replace(/'/g,"\\'")}')" class="${i.tieneImagen?'text-green-500 hover:text-green-700':'text-gray-400 hover:text-gray-600'} px-1" title="${i.tieneImagen?'Reemplazar imagen':'Subir imagen'}"><i class="fa-solid fa-camera"></i></button>${i.tieneImagen?`<button onclick="eliminarImagen('ingrediente','${i.id}','${i.nombre.replace(/'/g,"\\'")}')" class="text-orange-500 hover:text-orange-700 px-1" title="Eliminar imagen"><i class="fa-solid fa-image"></i></button>`:''}<button onclick="mostrarFormAdmin('ingrediente','${i.id}')" class="text-blue-500 hover:text-blue-700 px-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarEntidadLocal('ingredienteextra','${i.id}')" class="text-red-500 hover:text-red-700 px-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join(''));
+  }catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+async function eliminarEntidadLocal(tipo,id){
+  const r=await Swal.fire({title:'Eliminar?',text:'Esta acción no se puede deshacer.',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, eliminar'});
+  if(!r.isConfirmed)return;
+  try{await apiCall('DELETE',`/${tipo}/delete/${id}`);Swal.fire({icon:'success',title:'Eliminado',timer:1000,showConfirmButton:false});
+    const fn={producto:()=>cargarLocalProductos(),franja:cargarLocalFranjas,descuento:cargarLocalDescuentos,ingredienteextra:cargarLocalIngredientes}[tipo];if(fn)fn();}
+  catch(err){Swal.fire({icon:'error',title:'Error',text:err.message});}
+}
+
+// ==================== DARK MODE ====================
+function toggleDarkMode(){
+  const html=document.documentElement;
+  const isDark=html.classList.toggle('dark');
+  localStorage.setItem('uambite_dark',isDark?'1':'0');
+  actualizarIconoDark(isDark);
+}
+function actualizarIconoDark(isDark){
+  const icon=document.getElementById('dark-icon');
+  if(isDark){icon.className='fa-solid fa-sun text-lg text-yellow-400';}
+  else{icon.className='fa-solid fa-moon text-lg';}
+}
+
+// ==================== INICIALIZACIÓN ====================
+(function init(){
+  if(localStorage.getItem('uambite_dark')==='1'){document.documentElement.classList.add('dark');actualizarIconoDark(true);}
+  document.getElementById('modal-producto').addEventListener('click',function(e){if(e.target===this)cerrarModal();});
+  if(cargarSesion()){state.cart=JSON.parse(localStorage.getItem('uambite_cart_'+state.user.id)||'[]');actualizarBadge();document.getElementById('nav-admin-btn').classList.toggle('hidden',state.user.rol!=='ADMIN');document.getElementById('nav-local-btn').classList.toggle('hidden',state.user.rol!=='LOCAL');mostrarVista('home');}
+  else mostrarVista('login');
+})();
+</script>
+</body>
+</html>
