@@ -1,5 +1,7 @@
 package com.uambite.app.data.auth
 
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -16,7 +18,7 @@ class AuthInterceptor @Inject constructor(
         val request = chain.request()
         val token = runBlocking { tokenStore.token.first() }
 
-        return if (token != null) {
+        val response = if (token != null) {
             val authenticatedRequest = request.newBuilder()
                 .header("Authorization", "Bearer $token")
                 .build()
@@ -24,5 +26,18 @@ class AuthInterceptor @Inject constructor(
         } else {
             chain.proceed(request)
         }
+
+        if (response.code == 401) {
+            unauthorizedEvents.tryEmit(Unit)
+        }
+        return response
+    }
+
+    companion object {
+        val unauthorizedEvents: MutableSharedFlow<Unit> = MutableSharedFlow(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
     }
 }

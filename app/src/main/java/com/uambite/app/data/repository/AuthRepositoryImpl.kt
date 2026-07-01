@@ -7,6 +7,7 @@ import com.uambite.app.data.api.LoginRequest
 import com.uambite.app.data.api.RegisterRequest
 import com.uambite.app.data.auth.TokenStore
 import com.uambite.app.domain.repository.AuthRepository
+import com.uambite.app.domain.repository.CartRepository
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import java.io.IOException
@@ -16,7 +17,8 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
-    private val tokenStore: TokenStore
+    private val tokenStore: TokenStore,
+    private val cartRepository: CartRepository
 ) : AuthRepository {
 
     override suspend fun login(carnet: String, password: String): Result<AuthResponse> {
@@ -62,6 +64,12 @@ class AuthRepositoryImpl @Inject constructor(
                 throw HttpException(response)
             }
         }
+    }
+
+    override suspend fun logout() {
+        cartRepository.vaciar()
+        cartRepository.setUserId(null)
+        tokenStore.clearSession()
     }
 
     private inline fun <T> safeApiCall(call: () -> T): Result<T> {

@@ -15,13 +15,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -77,7 +77,7 @@ fun RegisterScreen(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
                 .padding(24.dp),
@@ -89,7 +89,8 @@ fun RegisterScreen(
                 onValueChange = { carnet = it },
                 label = { Text("Carnet") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -97,7 +98,8 @@ fun RegisterScreen(
                 onValueChange = { nombre = it },
                 label = { Text("Nombre") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -105,7 +107,8 @@ fun RegisterScreen(
                 onValueChange = { apellido = it },
                 label = { Text("Apellido") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -113,7 +116,8 @@ fun RegisterScreen(
                 onValueChange = { correo = it },
                 label = { Text("Correo") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
@@ -122,7 +126,8 @@ fun RegisterScreen(
                 label = { Text("Contraseña") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                shape = MaterialTheme.shapes.large
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -138,22 +143,20 @@ fun RegisterScreen(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(type = androidx.compose.material3.MenuAnchorType.PrimaryNotEditable)
+                        .menuAnchor(type = androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
+                    shape = MaterialTheme.shapes.large
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
                     roles.forEach { item ->
-                        Text(
-                            text = item,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    rol = item
-                                    expanded = false
-                                }
-                                .padding(16.dp)
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                rol = item
+                                expanded = false
+                            }
                         )
                     }
                 }
@@ -165,7 +168,7 @@ fun RegisterScreen(
                     text = errorState.message,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 12.dp)
                 )
             }
 
@@ -177,7 +180,8 @@ fun RegisterScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = state !is AuthViewModel.RegisterUiState.Loading
+                enabled = state !is AuthViewModel.RegisterUiState.Loading,
+                shape = MaterialTheme.shapes.large
             ) {
                 if (state is AuthViewModel.RegisterUiState.Loading) {
                     CircularProgressIndicator(

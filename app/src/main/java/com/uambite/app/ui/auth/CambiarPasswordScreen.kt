@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +63,7 @@ fun CambiarPasswordScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -86,68 +88,84 @@ fun CambiarPasswordScreen(
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = actual,
-            onValueChange = { actual = it },
-            label = { Text("Contraseña actual (temporal)") },
-            visualTransformation = PasswordVisualTransformation(),
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = nuevo,
-            onValueChange = { nuevo = it },
-            label = { Text("Nueva contraseña") },
-            placeholder = { Text("Mínimo 6 caracteres") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = confirmar,
-            onValueChange = { confirmar = it },
-            label = { Text("Confirmar nueva contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        val errorState = state as? AuthViewModel.CambiarPasswordUiState.Error
-        val errorMessage = validationError ?: errorState?.message
-        if (errorMessage != null) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = {
-                if (validate()) {
-                    viewModel.cambiarPassword(actual, nuevo)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            enabled = state !is AuthViewModel.CambiarPasswordUiState.Loading
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            if (state is AuthViewModel.CambiarPasswordUiState.Loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                OutlinedTextField(
+                    value = actual,
+                    onValueChange = { actual = it },
+                    label = { Text("Contraseña actual (temporal)") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.large
                 )
-            } else {
-                Text("Establecer contraseña")
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = nuevo,
+                    onValueChange = { nuevo = it },
+                    label = { Text("Nueva contraseña") },
+                    placeholder = { Text("Mínimo 6 caracteres") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.large
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = confirmar,
+                    onValueChange = { confirmar = it },
+                    label = { Text("Confirmar nueva contraseña") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.large
+                )
+
+                val errorState = state as? AuthViewModel.CambiarPasswordUiState.Error
+                val errorMessage = validationError ?: errorState?.message
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = {
+                        if (validate()) {
+                            viewModel.cambiarPassword(actual, nuevo)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    enabled = state !is AuthViewModel.CambiarPasswordUiState.Loading,
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    if (state is AuthViewModel.CambiarPasswordUiState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Establecer contraseña")
+                    }
+                }
             }
         }
     }
