@@ -12,7 +12,14 @@ inline fun <T> safeApiCall(call: () -> T): Result<T> {
     } catch (e: HttpException) {
         Result.failure(Exception(extractErrorMessage(e)))
     } catch (e: Exception) {
-        Result.failure(Exception(e.message ?: "Error inesperado"))
+        val msg = e.message ?: "Error inesperado"
+        // Evitar mostrar mensajes técnicos de serialización que parecen JSON
+        val cleanMsg = if (msg.contains("kotlinx.serialization") || msg.contains("{") || msg.contains("[")) {
+            "Error al procesar la respuesta del servidor"
+        } else {
+            msg
+        }
+        Result.failure(Exception(cleanMsg))
     }
 }
 
@@ -22,12 +29,24 @@ fun extractErrorMessage(e: HttpException): String {
         if (!errorBody.isNullOrBlank()) {
             val json = Json { ignoreUnknownKeys = true }
             val error = json.decodeFromString<ErrorResponse>(errorBody)
-            error.message ?: "Error ${e.code()}"
+            error.message ?: when(e.code()) {
+                403 -> "Acceso denegado"
+                401 -> "Sesión expirada"
+                else -> "Error ${e.code()}"
+            }
         } else {
-            "Error ${e.code()}"
+            when(e.code()) {
+                403 -> "Acceso denegado"
+                401 -> "Sesión expirada"
+                else -> "Error ${e.code()}"
+            }
         }
     } catch (_: Exception) {
-        "Error ${e.code()}"
+        when(e.code()) {
+            403 -> "Acceso denegado"
+            401 -> "Sesión expirada"
+            else -> "Error ${e.code()}"
+        }
     }
 }
 

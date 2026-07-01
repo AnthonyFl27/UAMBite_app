@@ -12,7 +12,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class OrdersViewModel @Inject constructor(
-    private val pedidosRepository: PedidosRepository
+    private val pedidosRepository: PedidosRepository,
+    private val entregasRepository: com.uambite.app.domain.repository.EntregasRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -54,9 +55,23 @@ class OrdersViewModel @Inject constructor(
     fun confirmarRetiro(pedidoId: String) {
         viewModelScope.launch {
             _actionState.value = ActionState.Loading
+            // Para retiro local, usamos el estado ENTREGADO si el repo lo soporta
+            // O podemos crear una entrega rápida y finalizarla.
             val result = pedidosRepository.cambiarEstado(pedidoId, "ENTREGADO")
             _actionState.value = result.fold(
                 onSuccess = { ActionState.Success("Retiro confirmado") },
+                onFailure = { ActionState.Error(it.message ?: "Error al confirmar") }
+            )
+            load()
+        }
+    }
+
+    fun confirmarRecibido(entregaId: String) {
+        viewModelScope.launch {
+            _actionState.value = ActionState.Loading
+            val result = entregasRepository.finalizar(entregaId)
+            _actionState.value = result.fold(
+                onSuccess = { ActionState.Success("Pedido recibido") },
                 onFailure = { ActionState.Error(it.message ?: "Error al confirmar") }
             )
             load()

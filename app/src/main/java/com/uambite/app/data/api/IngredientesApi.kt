@@ -13,7 +13,7 @@ interface IngredientesApi {
     @GET("ingredienteextra/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<IngredienteExtraResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @GET("ingredienteextra/{id}")
     suspend fun getById(@Path("id") id: String): IngredienteExtraResponse

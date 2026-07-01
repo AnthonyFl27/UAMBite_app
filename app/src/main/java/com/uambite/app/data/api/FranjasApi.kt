@@ -1,5 +1,6 @@
 package com.uambite.app.data.api
 
+import kotlinx.serialization.json.JsonElement
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -13,10 +14,10 @@ interface FranjasApi {
     @GET("franja/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<FranjaHorariaResponse>
+    ): JsonElement
 
     @GET("franja/disponibles")
-    suspend fun getDisponibles(): List<FranjaHorariaResponse>
+    suspend fun getDisponibles(): JsonElement
 
     @GET("franja/{id}")
     suspend fun getById(@Path("id") id: String): FranjaHorariaResponse

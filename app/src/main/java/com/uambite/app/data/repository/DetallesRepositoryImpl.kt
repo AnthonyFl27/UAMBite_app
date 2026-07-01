@@ -44,8 +44,8 @@ class DetallesRepositoryImpl @Inject constructor(
             DetalleIngredienteExtra(
                 id = ie.id,
                 ingredienteExtraId = ie.ingredienteExtraId,
-                nombre = ie.ingredienteExtra,
-                precioExtra = ie.precioExtra
+                nombre = ie.nombre,
+                precioExtra = ie.precioAdicional
             )
         }
     )

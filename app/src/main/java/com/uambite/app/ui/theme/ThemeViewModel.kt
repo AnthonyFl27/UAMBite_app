@@ -28,7 +28,7 @@ class ThemeViewModel @Inject constructor(
     )
 
     val isDarkTheme: StateFlow<Boolean?> = combine(
-        themePreferences.themeMode,
+        themeMode,
         systemDark
     ) { mode, system ->
         when (mode) {

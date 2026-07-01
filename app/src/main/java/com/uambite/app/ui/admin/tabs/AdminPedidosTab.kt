@@ -82,7 +82,7 @@ fun AdminPedidosTab(viewModel: AdminViewModel) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "${tipoEntregaTexto(pedido.tipoEntrega)} · Prioridad ${pedido.prioridad}",
+                text = "${tipoEntregaTexto(pedido.tipoEntrega)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = Gray500
             )
@@ -149,28 +149,6 @@ fun AdminPedidosTab(viewModel: AdminViewModel) {
                     BtnAccion("Finalizar Entrega", Green800) {
                         pedido.entrega.id?.let { viewModel.finalizarEntrega(it) }
                     }
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Prioridad:", style = MaterialTheme.typography.bodySmall, color = Gray500)
-                Spacer(Modifier.size(6.dp))
-                IconButton(
-                    onClick = { viewModel.setPrioridad(pedido.id, pedido.prioridad - 1) },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Text("−", style = MaterialTheme.typography.titleLarge, color = Blue600)
-                }
-                Text(
-                    text = pedido.prioridad.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-                IconButton(
-                    onClick = { viewModel.setPrioridad(pedido.id, pedido.prioridad + 1) },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Text("+", style = MaterialTheme.typography.titleLarge, color = Blue600)
                 }
             }
         }

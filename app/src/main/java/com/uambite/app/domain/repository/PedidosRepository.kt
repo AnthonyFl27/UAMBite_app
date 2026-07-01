@@ -4,6 +4,7 @@ import com.uambite.app.domain.model.Pedido
 
 interface PedidosRepository {
     suspend fun getMisPedidos(): Result<List<Pedido>>
+    suspend fun getAllPedidos(): Result<List<Pedido>>
     suspend fun getById(id: String): Result<Pedido>
     suspend fun save(
         tipoEntrega: String,

@@ -12,6 +12,11 @@ import com.uambite.app.domain.model.Entrega
 import com.uambite.app.domain.model.Pago
 import com.uambite.app.domain.model.Pedido
 import com.uambite.app.domain.repository.PedidosRepository
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,9 +25,28 @@ class PedidosRepositoryImpl @Inject constructor(
     private val api: PedidosApi
 ) : PedidosRepository {
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
+
     override suspend fun getMisPedidos(): Result<List<Pedido>> {
         return safeApiCall {
-            api.getMisPedidos().map { it.toDomain() }
+            val element = api.getMisPedidos()
+            val pedidos = json.decodeFromJsonElement<List<PedidoResponse>>(
+                extractContentIfPage(element)
+            )
+            pedidos.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getAllPedidos(): Result<List<Pedido>> {
+        return safeApiCall {
+            val element = api.getAll()
+            val list = json.decodeFromJsonElement<List<PedidoResponse>>(
+                extractContentIfPage(element)
+            )
+            list.map { it.toDomain() }
         }
     }
 
@@ -52,7 +76,14 @@ class PedidosRepositoryImpl @Inject constructor(
 
     override suspend fun cambiarEstado(id: String, estado: String): Result<Pedido> {
         return safeApiCall {
-            api.cambiarEstado(id, PedidoEstadoRequest(estado)).toDomain()
+            when (estado) {
+                "CONFIRMADO" -> api.confirmar(id).toDomain()
+                "EN_PREPARACION" -> api.preparar(id).toDomain()
+                "LISTO" -> api.listo(id).toDomain()
+                "ENTREGADO" -> api.entregar(id).toDomain()
+                "CANCELADO" -> api.cancelar(id).toDomain()
+                else -> throw Exception("Estado no soportado: $estado")
+            }
         }
     }
 
@@ -65,6 +96,15 @@ class PedidosRepositoryImpl @Inject constructor(
     override suspend fun eliminar(id: String): Result<Unit> {
         return safeApiCall {
             api.eliminar(id)
+        }
+    }
+
+    private fun extractContentIfPage(element: JsonElement): JsonElement {
+        return try {
+            val obj = element.jsonObject
+            obj["content"] ?: element
+        } catch (_: Exception) {
+            element
         }
     }
 
@@ -99,8 +139,8 @@ class PedidosRepositoryImpl @Inject constructor(
                 DetalleIngredienteExtra(
                     id = ie.id,
                     ingredienteExtraId = ie.ingredienteExtraId,
-                    nombre = ie.ingredienteExtra,
-                    precioExtra = ie.precioExtra
+                    nombre = ie.nombre,
+                    precioExtra = ie.precioAdicional
                 )
             }
         )

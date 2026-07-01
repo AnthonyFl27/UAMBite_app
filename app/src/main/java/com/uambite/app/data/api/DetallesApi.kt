@@ -12,7 +12,7 @@ interface DetallesApi {
     @GET("detallepedido/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<DetallePedidoResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @POST("detallepedido/save")
     suspend fun save(@Body request: DetallePedidoRequest): DetallePedidoResponse

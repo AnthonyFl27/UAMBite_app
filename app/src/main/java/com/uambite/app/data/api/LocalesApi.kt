@@ -13,7 +13,7 @@ interface LocalesApi {
     @GET("localcomida/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<LocalComidaResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @GET("localcomida/{id}")
     suspend fun getById(@Path("id") id: String): LocalComidaResponse

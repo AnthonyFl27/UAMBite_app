@@ -11,7 +11,7 @@ interface PagoApi {
     @GET("pago/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<PagoResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @GET("pago/{id}")
     suspend fun getById(@Path("id") id: String): PagoResponse

@@ -80,23 +80,24 @@ fun LocalAdminFranjasTab(viewModel: LocalAdminViewModel) {
     if (m != null) {
         AdminFormDialog(
             titulo = if (m.existente == null) "Nueva Franja" else "Editar Franja",
-            campos = listOf(
-                if (localesOptions.isEmpty()) {
-                    AdminFormField.Text("aviso", "Sin locales asignados", required = false)
-                } else if (localesOptions.size == 1) {
-                    AdminFormField.Text("aviso", "Local: ${localesOptions.first().second}", required = false)
-                } else {
-                    AdminFormField.Select(
-                        "localComidaId", "Local",
-                        localesOptions,
-                        initial = m.existente?.localComidaId ?: localesOptions.first().first
+            campos = buildList {
+                if (localesOptions.size > 1) {
+                    add(
+                        AdminFormField.Select(
+                            "localComidaId", "Local",
+                            localesOptions,
+                            initial = m.existente?.localComidaId ?: localesOptions.first().first
+                        )
                     )
-                },
-                AdminFormField.Text("horaInicio", "Hora inicio (HH:mm)", m.existente?.horaInicio ?: ""),
-                AdminFormField.Text("horaFin", "Hora fin (HH:mm)", m.existente?.horaFin ?: ""),
-                AdminFormField.Text("capacidadMaxima", "Capacidad máxima", m.existente?.capacidadMaxima?.toString() ?: "", isNumber = true),
-                AdminFormField.Bool("disponible", "Disponible", m.existente?.disponible ?: true)
-            ),
+                } else if (localesOptions.isEmpty()) {
+                    add(AdminFormField.Text("aviso", "Sin locales asignados", required = false))
+                }
+
+                add(AdminFormField.Text("horaInicio", "Hora inicio (HH:mm)", m.existente?.horaInicio ?: ""))
+                add(AdminFormField.Text("horaFin", "Hora fin (HH:mm)", m.existente?.horaFin ?: ""))
+                add(AdminFormField.Text("capacidadMaxima", "Capacidad máxima", m.existente?.capacidadMaxima?.toString() ?: "", isNumber = true))
+                add(AdminFormField.Bool("disponible", "Disponible", m.existente?.disponible ?: true))
+            },
             textoConfirmar = if (m.existente == null) "Crear" else "Guardar",
             onCancelar = { modo = null },
             onConfirmar = { valores, checks ->

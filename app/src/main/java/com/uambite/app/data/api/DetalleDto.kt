@@ -25,6 +25,6 @@ data class DetallePedidoResponse(
 data class DetallePedidoIngredienteExtraResponse(
     val id: String? = null,
     val ingredienteExtraId: String? = null,
-    val ingredienteExtra: String? = null,
-    val precioExtra: Double = 0.0
+    val nombre: String? = null,
+    val precioAdicional: Double = 0.0
 )

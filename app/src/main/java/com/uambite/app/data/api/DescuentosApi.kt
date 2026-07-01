@@ -13,7 +13,7 @@ interface DescuentosApi {
     @GET("descuento/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<DescuentoResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @GET("descuento/{id}")
     suspend fun getById(@Path("id") id: String): DescuentoResponse

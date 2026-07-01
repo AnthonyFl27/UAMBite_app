@@ -13,7 +13,7 @@ interface ProductosApi {
     @GET("producto/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<ProductoResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @GET("producto/{id}")
     suspend fun getById(@Path("id") id: String): ProductoResponse

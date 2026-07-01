@@ -12,7 +12,7 @@ interface EntregasApi {
     @GET("entrega/all")
     suspend fun getAll(
         @Query("size") size: Int = 1000
-    ): PageDto<EntregaResponse>
+    ): kotlinx.serialization.json.JsonElement
 
     @POST("entrega/save")
     suspend fun save(@Body request: EntregaRequest): EntregaResponse

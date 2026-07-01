@@ -9,17 +9,48 @@ import com.uambite.app.domain.repository.FranjasRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+// ...
 @Singleton
 class FranjasRepositoryImpl @Inject constructor(
     private val api: FranjasApi
 ) : FranjasRepository {
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
+
     override suspend fun getDisponibles(): Result<List<FranjaHoraria>> {
-        return safeApiCall { api.getDisponibles().map { it.toDomain() } }
+        return safeApiCall {
+            val element = api.getDisponibles()
+            val list = json.decodeFromJsonElement<List<FranjaHorariaResponse>>(
+                extractContentIfPage(element)
+            )
+            list.map { it.toDomain() }
+        }
     }
 
     override suspend fun getAll(): Result<List<FranjaHoraria>> {
-        return safeApiCall { api.getAll().content.map { it.toDomain() } }
+        return safeApiCall {
+            val element = api.getAll()
+            val list = json.decodeFromJsonElement<List<FranjaHorariaResponse>>(
+                extractContentIfPage(element)
+            )
+            list.map { it.toDomain() }
+        }
+    }
+
+    private fun extractContentIfPage(element: JsonElement): JsonElement {
+        return try {
+            val obj = element.jsonObject
+            obj["content"] ?: element
+        } catch (_: Exception) {
+            element
+        }
     }
 
     override suspend fun crear(

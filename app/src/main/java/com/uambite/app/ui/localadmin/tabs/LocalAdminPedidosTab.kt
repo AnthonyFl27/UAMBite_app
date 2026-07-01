@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.Icon
@@ -37,11 +39,24 @@ import com.uambite.app.ui.theme.Purple700
 import com.uambite.app.ui.theme.Red700
 import java.util.Locale
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+// ...
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+// ...
 @Composable
 fun LocalAdminPedidosTab(viewModel: LocalAdminViewModel) {
     val pedidos by viewModel.pedidos.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val isLoading = "pedidos" in loading
+
+    var pedidoParaEntrega by remember { mutableStateOf<Pedido?>(null) }
+    var ubicacion by remember { mutableStateOf("") }
 
     if (isLoading && pedidos.isEmpty()) {
         LoadingBox()
@@ -52,24 +67,53 @@ fun LocalAdminPedidosTab(viewModel: LocalAdminViewModel) {
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
     ) {
-        Text(
-            text = "Pedidos de tus locales",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        pedidos.forEach { pedido ->
+        item {
+            Text(
+                text = "Pedidos de tus locales",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        items(pedidos, key = { it.id }) { pedido ->
             PedidoRowAdmin(
                 pedido = pedido,
                 onAccion = { estado -> viewModel.cambiarEstadoPedido(pedido.id, estado) },
-                onPrioridad = { delta -> viewModel.setPrioridad(pedido.id, pedido.prioridad + delta) }
+                onCrearEntrega = { pedidoParaEntrega = pedido; ubicacion = "" }
             )
         }
+    }
+
+    pedidoParaEntrega?.let { pedido ->
+        AlertDialog(
+            onDismissRequest = { pedidoParaEntrega = null },
+            title = { Text("Crear Entrega") },
+            text = {
+                OutlinedTextField(
+                    value = ubicacion,
+                    onValueChange = { ubicacion = it },
+                    label = { Text("Ubicación") },
+                    placeholder = { Text("ej: Recepción Edificio A") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (ubicacion.isNotBlank()) {
+                        viewModel.crearEntrega(pedido.id, ubicacion.trim())
+                        pedidoParaEntrega = null
+                    }
+                }) { Text("Crear") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pedidoParaEntrega = null }) { Text("Cancelar") }
+            }
+        )
     }
 }
 
@@ -77,7 +121,7 @@ fun LocalAdminPedidosTab(viewModel: LocalAdminViewModel) {
 private fun PedidoRowAdmin(
     pedido: Pedido,
     onAccion: (String) -> Unit,
-    onPrioridad: (Int) -> Unit
+    onCrearEntrega: () -> Unit
 ) {
     AdminCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -100,7 +144,7 @@ private fun PedidoRowAdmin(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "${pedido.tipoEntrega ?: "—"} · Prioridad ${pedido.prioridad}",
+            text = tipoEntregaTexto(pedido.tipoEntrega),
             style = MaterialTheme.typography.bodySmall,
             color = Gray500
         )
@@ -115,11 +159,20 @@ private fun PedidoRowAdmin(
             if (pedido.estado == "EN_PREPARACION") {
                 BtnAccion("Listo", Green700) { onAccion("LISTO") }
             }
+            if (pedido.estado == "LISTO" && pedido.tipoEntrega == "ENTREGA_INTERNA") {
+                BtnAccion("Enviar", Orange700) { onCrearEntrega() }
+            }
             if (pedido.estado in listOf("PENDIENTE", "CONFIRMADO", "EN_PREPARACION")) {
                 BtnAccion("Cancelar", Red700) { onAccion("CANCELADO") }
             }
         }
     }
+}
+
+private fun tipoEntregaTexto(tipo: String?): String = when (tipo) {
+    "RETIRO_LOCAL" -> "Retiro en local"
+    "ENTREGA_INTERNA" -> "Entrega interna"
+    else -> tipo ?: "—"
 }
 
 private fun formatPrecio(v: Double): String = "$${String.format(Locale.US, "%.2f", v)}"

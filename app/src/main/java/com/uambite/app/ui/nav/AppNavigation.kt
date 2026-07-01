@@ -2,6 +2,7 @@ package com.uambite.app.ui.nav
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -62,6 +63,7 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val startDestination by viewModel.startDestination.collectAsState()
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     val isDarkMode by themeViewModel.isDarkTheme.collectAsState()
 
     if (startDestination.isEmpty()) {
@@ -127,6 +129,7 @@ fun AppNavigation(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
         ) {
             NavHost(
                 navController = navController,
@@ -180,7 +183,7 @@ fun AppNavigation(
                             navController.navigate("local/$localId")
                         },
                         onToggleDarkMode = { themeViewModel.toggleDarkMode() },
-                        isDarkMode = isDarkMode ?: false
+                        isDarkMode = isDarkMode ?: systemDark
                     )
                 }
 

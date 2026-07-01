@@ -51,5 +51,6 @@ data class EntregaResponse(
     val id: String? = null,
     val estado: String? = null,
     val ubicacion: String? = null,
-    val pedidoId: String? = null
+    val pedidoId: String? = null,
+    val fechaEntrega: String? = null
 )

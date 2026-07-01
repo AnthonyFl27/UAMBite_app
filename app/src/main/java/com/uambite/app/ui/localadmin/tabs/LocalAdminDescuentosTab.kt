@@ -92,23 +92,25 @@ fun LocalAdminDescuentosTab(viewModel: LocalAdminViewModel) {
     if (m != null) {
         AdminFormDialog(
             titulo = if (m.existente == null) "Nuevo Descuento" else "Editar Descuento",
-            campos = listOf(
-                AdminFormField.Text("codigo", "Código", m.existente?.codigo ?: ""),
-                AdminFormField.Text("porcentaje", "Porcentaje", m.existente?.porcentaje?.toString() ?: "", isNumber = true),
-                AdminFormField.Text("fechaVencimiento", "Fecha vencimiento (YYYY-MM-DD)", m.existente?.fechaVencimiento ?: "", required = false),
-                if (localesOptions.isEmpty()) {
-                    AdminFormField.Text("aviso", "Sin locales asignados", required = false)
-                } else if (localesOptions.size == 1) {
-                    AdminFormField.Text("aviso", "Local: ${localesOptions.first().second}", required = false)
-                } else {
-                    AdminFormField.Select(
-                        "localComidaId", "Local",
-                        localesOptions,
-                        initial = m.existente?.localComidaId ?: localesOptions.first().first
+            campos = buildList {
+                add(AdminFormField.Text("codigo", "Código", m.existente?.codigo ?: ""))
+                add(AdminFormField.Text("porcentaje", "Porcentaje", m.existente?.porcentaje?.toString() ?: "", isNumber = true))
+                add(AdminFormField.Text("fechaVencimiento", "Fecha vencimiento (YYYY-MM-DD)", m.existente?.fechaVencimiento ?: "", required = false))
+
+                if (localesOptions.size > 1) {
+                    add(
+                        AdminFormField.Select(
+                            "localComidaId", "Local",
+                            localesOptions,
+                            initial = m.existente?.localComidaId ?: localesOptions.first().first
+                        )
                     )
-                },
-                AdminFormField.Bool("activo", "Activo", m.existente?.activo ?: true)
-            ),
+                } else if (localesOptions.isEmpty()) {
+                    add(AdminFormField.Text("aviso", "Sin locales asignados", required = false))
+                }
+
+                add(AdminFormField.Bool("activo", "Activo", m.existente?.activo ?: true))
+            },
             textoConfirmar = if (m.existente == null) "Crear" else "Guardar",
             onCancelar = { modo = null },
             onConfirmar = { valores, checks ->

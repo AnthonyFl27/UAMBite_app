@@ -90,7 +90,7 @@ class AdminViewModel @Inject constructor(
     private fun loadPedidos() {
         viewModelScope.launch {
             setLoading("pedidos", true)
-            val result = pedidosRepository.getMisPedidos()
+            val result = pedidosRepository.getAllPedidos()
             result.onSuccess { _pedidos.value = it.sortedByDescending { p -> p.createdAt ?: "" } }
             setLoading("pedidos", false)
         }
@@ -100,7 +100,7 @@ class AdminViewModel @Inject constructor(
         viewModelScope.launch {
             setLoading("pedidos", true)
             val allLocales = localesRepository.getLocales().getOrNull().orEmpty()
-            val result = pedidosRepository.getMisPedidos()
+            val result = pedidosRepository.getAllPedidos()
             result.onSuccess { _pedidos.value = it.sortedByDescending { p -> p.createdAt ?: "" } }
             _locales.value = allLocales
             setLoading("pedidos", false)

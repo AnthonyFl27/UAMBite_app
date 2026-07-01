@@ -135,24 +135,25 @@ fun LocalAdminProductosTab(
     if (m != null) {
         AdminFormDialog(
             titulo = if (m.existente == null) "Nuevo Producto" else "Editar Producto",
-            campos = listOf(
-                if (localesOptions.isEmpty()) {
-                    AdminFormField.Text("aviso", "Sin locales asignados", required = false)
-                } else if (localesOptions.size == 1) {
-                    AdminFormField.Text("aviso", "Local: ${localesOptions.first().second}", required = false)
-                } else {
-                    AdminFormField.Select(
-                        "localComidaId", "Local",
-                        localesOptions,
-                        initial = m.existente?.localComidaId ?: localesOptions.first().first
+            campos = buildList {
+                if (localesOptions.size > 1) {
+                    add(
+                        AdminFormField.Select(
+                            "localComidaId", "Local",
+                            localesOptions,
+                            initial = m.existente?.localComidaId ?: localesOptions.first().first
+                        )
                     )
-                },
-                AdminFormField.Text("nombre", "Nombre", m.existente?.nombre ?: ""),
-                AdminFormField.Text("descripcion", "Descripción", m.existente?.descripcion ?: "", required = false),
-                AdminFormField.Text("precio", "Precio", m.existente?.precio?.toString() ?: "", isNumber = true),
-                AdminFormField.Text("stock", "Stock", m.existente?.stock?.toString() ?: "", isNumber = true),
-                AdminFormField.Bool("permitePersonalizacion", "Permite personalización", m.existente?.permitePersonalizacion ?: false)
-            ),
+                } else if (localesOptions.isEmpty()) {
+                    add(AdminFormField.Text("aviso", "Sin locales asignados", required = false))
+                }
+
+                add(AdminFormField.Text("nombre", "Nombre", m.existente?.nombre ?: ""))
+                add(AdminFormField.Text("descripcion", "Descripción", m.existente?.descripcion ?: "", required = false))
+                add(AdminFormField.Text("precio", "Precio", m.existente?.precio?.toString() ?: "", isNumber = true))
+                add(AdminFormField.Text("stock", "Stock", m.existente?.stock?.toString() ?: "", isNumber = true))
+                add(AdminFormField.Bool("permitePersonalizacion", "Permite personalización", m.existente?.permitePersonalizacion ?: false))
+            },
             textoConfirmar = if (m.existente == null) "Crear" else "Guardar",
             onCancelar = { modo = null },
             onConfirmar = { valores, checks ->

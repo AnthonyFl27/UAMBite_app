@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -67,13 +68,22 @@ fun AdminFormDialog(
     onCancelar: () -> Unit,
     onConfirmar: (valores: Map<String, String>, checks: Map<String, Boolean>) -> Unit
 ) {
-    val valores = remember { mutableMapOf<String, String>() }
-    val checks = remember { mutableMapOf<String, Boolean>() }
-    campos.forEach { campo ->
-        when (campo) {
-            is AdminFormField.Text -> if (campo.key !in valores) valores[campo.key] = campo.initial
-            is AdminFormField.Select -> if (campo.key !in valores) valores[campo.key] = campo.initial
-            is AdminFormField.Bool -> if (campo.key !in checks) checks[campo.key] = campo.initial
+    val valores = remember(campos) {
+        mutableStateMapOf<String, String>().apply {
+            campos.forEach { campo ->
+                when (campo) {
+                    is AdminFormField.Text -> put(campo.key, campo.initial)
+                    is AdminFormField.Select -> put(campo.key, campo.initial)
+                    else -> {}
+                }
+            }
+        }
+    }
+    val checks = remember(campos) {
+        mutableStateMapOf<String, Boolean>().apply {
+            campos.forEach { campo ->
+                if (campo is AdminFormField.Bool) put(campo.key, campo.initial)
+            }
         }
     }
 

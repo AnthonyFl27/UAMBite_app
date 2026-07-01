@@ -29,7 +29,8 @@ class LocalAdminViewModel @Inject constructor(
     private val franjasRepository: FranjasRepository,
     private val descuentosRepository: DescuentosRepository,
     private val pedidosRepository: PedidosRepository,
-    private val usuariosRepository: UsuariosRepository
+    private val usuariosRepository: UsuariosRepository,
+    private val entregasRepository: com.uambite.app.domain.repository.EntregasRepository
 ) : ViewModel() {
 
     private val _misLocales = MutableStateFlow<List<Local>>(emptyList())
@@ -56,6 +57,8 @@ class LocalAdminViewModel @Inject constructor(
     private val _snackbar = MutableStateFlow<String?>(null)
     val snackbar: StateFlow<String?> = _snackbar
 
+    private var lastUserId: String? = null
+
     fun resetSnackbar() { _snackbar.value = null }
 
     private fun setLoading(tab: String, value: Boolean) {
@@ -65,13 +68,15 @@ class LocalAdminViewModel @Inject constructor(
     }
 
     fun loadTab(tab: String, userId: String?) {
-        if (userId == null) return
+        if (userId != null) lastUserId = userId
+        if (userId == null && lastUserId == null) return
+        val currentUserId = userId ?: lastUserId!!
         when (tab) {
-            "pedidos" -> loadPedidos(userId)
-            "local" -> loadLocalesPropios(userId)
-            "productos" -> loadProductosPropios(userId)
-            "franjas" -> loadFranjasPropias(userId)
-            "descuentos" -> loadDescuentosPropios(userId)
+            "pedidos" -> loadPedidos(currentUserId)
+            "local" -> loadLocalesPropios(currentUserId)
+            "productos" -> loadProductosPropios(currentUserId)
+            "franjas" -> loadFranjasPropias(currentUserId)
+            "descuentos" -> loadDescuentosPropios(currentUserId)
             "ingredientes" -> loadIngredientes()
         }
     }
@@ -94,12 +99,10 @@ class LocalAdminViewModel @Inject constructor(
     private fun loadPedidos(userId: String) {
         viewModelScope.launch {
             setLoading("pedidos", true)
-            val mios = cargarLocalesPropios(userId)
-            val todos = pedidosRepository.getMisPedidos().getOrNull().orEmpty()
-            val misIds = mios.map { it.id }.toSet()
-            _pedidos.value = todos.filter { p ->
-                p.localComidaId != null && p.localComidaId in misIds
-            }.sortedByDescending { it.createdAt ?: "" }
+            cargarLocalesPropios(userId) // Mantiene la lista de locales propios actualizada
+            val todos = pedidosRepository.getAllPedidos().getOrNull().orEmpty()
+            // El API filtra automáticamente por LOCAL o ADMIN, así que mostramos todo lo que nos llega
+            _pedidos.value = todos.sortedByDescending { it.createdAt ?: "" }
             setLoading("pedidos", false)
         }
     }
@@ -154,14 +157,36 @@ class LocalAdminViewModel @Inject constructor(
     fun cambiarEstadoPedido(pedidoId: String, estado: String) {
         viewModelScope.launch {
             val r = pedidosRepository.cambiarEstado(pedidoId, estado)
-            r.onSuccess { _snackbar.value = "Pedido → $estado" }
-                .onFailure { _snackbar.value = it.message }
+            r.onSuccess {
+                _snackbar.value = "Pedido → $estado"
+                loadTab("pedidos", null)
+            }.onFailure { _snackbar.value = it.message }
         }
     }
 
     fun setPrioridad(pedidoId: String, prioridad: Int) {
         viewModelScope.launch {
             pedidosRepository.setPrioridad(pedidoId, prioridad)
+        }
+    }
+
+    fun crearEntrega(pedidoId: String, ubicacion: String) {
+        viewModelScope.launch {
+            val r = entregasRepository.crear(pedidoId, ubicacion)
+            r.onSuccess {
+                _snackbar.value = "Entrega creada (EN_CAMINO)"
+                loadTab("pedidos", null)
+            }.onFailure { _snackbar.value = it.message }
+        }
+    }
+
+    fun finalizarEntrega(entregaId: String) {
+        viewModelScope.launch {
+            val r = entregasRepository.finalizar(entregaId)
+            r.onSuccess {
+                _snackbar.value = "Entrega finalizada"
+                loadTab("pedidos", null)
+            }.onFailure { _snackbar.value = it.message }
         }
     }
 

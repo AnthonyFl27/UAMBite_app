@@ -78,6 +78,7 @@ fun OrdersScreen(
     var pedidoAEliminar by remember { mutableStateOf<Pedido?>(null) }
     var pedidoACancelar by remember { mutableStateOf<Pedido?>(null) }
     var pedidoAConfirmarRetiro by remember { mutableStateOf<Pedido?>(null) }
+    var pedidoAConfirmarRecibido by remember { mutableStateOf<Pedido?>(null) }
 
     LaunchedEffect(actionState) {
         when (val s = actionState) {
@@ -126,6 +127,7 @@ fun OrdersScreen(
                                         procesando = actionState is OrdersViewModel.ActionState.Loading,
                                         onCancelar = { pedidoACancelar = pedido },
                                         onConfirmarRetiro = { pedidoAConfirmarRetiro = pedido },
+                                        onConfirmarRecibido = { pedidoAConfirmarRecibido = pedido },
                                         onEliminar = { pedidoAEliminar = pedido }
                                     )
                                 }
@@ -178,6 +180,18 @@ fun OrdersScreen(
             onCancelar = { pedidoAConfirmarRetiro = null }
         )
     }
+    pedidoAConfirmarRecibido?.let { pedido ->
+        ConfirmDialog(
+            titulo = "¿Confirmar recepción?",
+            mensaje = "¿Ya recibiste tu pedido?",
+            textoConfirmar = "Sí, lo recibí",
+            onConfirmar = {
+                pedido.entrega?.id?.let { viewModel.confirmarRecibido(it) }
+                pedidoAConfirmarRecibido = null
+            },
+            onCancelar = { pedidoAConfirmarRecibido = null }
+        )
+    }
 }
 
 @Composable
@@ -211,6 +225,7 @@ private fun PedidoCard(
     procesando: Boolean,
     onCancelar: () -> Unit,
     onConfirmarRetiro: () -> Unit,
+    onConfirmarRecibido: () -> Unit,
     onEliminar: () -> Unit
 ) {
     Column(
@@ -239,7 +254,7 @@ private fun PedidoCard(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = tipoEntregaTexto(pedido.tipoEntrega) + " · Prioridad ${pedido.prioridad}",
+            text = tipoEntregaTexto(pedido.tipoEntrega),
             style = MaterialTheme.typography.bodySmall,
             color = Gray500
         )
@@ -333,6 +348,20 @@ private fun PedidoCard(
                     modifier = Modifier.height(36.dp)
                 ) {
                     Text("Confirmar Retiro", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            if (pedido.estado == "EN_CAMINO" && pedido.tipoEntrega == "ENTREGA_INTERNA") {
+                Button(
+                    onClick = onConfirmarRecibido,
+                    enabled = !procesando,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Green600,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text("Confirmar Recibido", style = MaterialTheme.typography.labelMedium)
                 }
             }
             if (pedido.estado in listOf("PENDIENTE", "CANCELADO", "ENTREGADO")) {
