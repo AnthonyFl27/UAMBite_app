@@ -52,6 +52,7 @@ fun LocalAdminScreen(
     imagenVm: ImagenUploadViewModel = hiltViewModel()
 ) {
     val snackbar by viewModel.snackbar.collectAsState()
+    val snackbarLocal by viewModel.snackbarLocal.collectAsState()
     val uploadState by imagenVm.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val user by sessionViewModel.user.collectAsState()
@@ -64,6 +65,13 @@ fun LocalAdminScreen(
         snackbar?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.resetSnackbar()
+        }
+    }
+
+    LaunchedEffect(snackbarLocal) {
+        snackbarLocal?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.consumirSnackbarLocal()
         }
     }
 

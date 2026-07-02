@@ -13,8 +13,8 @@ inline fun <T> safeApiCall(call: () -> T): Result<T> {
         Result.failure(Exception(extractErrorMessage(e)))
     } catch (e: Exception) {
         val msg = e.message ?: "Error inesperado"
-        // Evitar mostrar mensajes técnicos de serialización que parecen JSON
-        val cleanMsg = if (msg.contains("kotlinx.serialization") || msg.contains("{") || msg.contains("[")) {
+        // Si el mensaje parece JSON o código técnico, lo limpiamos
+        val cleanMsg = if (msg.contains("{") || msg.contains("[") || msg.contains("kotlinx")) {
             "Error al procesar la respuesta del servidor"
         } else {
             msg
@@ -24,29 +24,21 @@ inline fun <T> safeApiCall(call: () -> T): Result<T> {
 }
 
 fun extractErrorMessage(e: HttpException): String {
+    val code = e.code()
+    if (code == 403) return "Acceso denegado: No tienes permisos para esta acción"
+    if (code == 401) return "Sesión expirada: Por favor inicia sesión de nuevo"
+    
     return try {
         val errorBody = e.response()?.errorBody()?.string()
         if (!errorBody.isNullOrBlank()) {
             val json = Json { ignoreUnknownKeys = true }
             val error = json.decodeFromString<ErrorResponse>(errorBody)
-            error.message ?: when(e.code()) {
-                403 -> "Acceso denegado"
-                401 -> "Sesión expirada"
-                else -> "Error ${e.code()}"
-            }
+            error.message ?: "Error $code"
         } else {
-            when(e.code()) {
-                403 -> "Acceso denegado"
-                401 -> "Sesión expirada"
-                else -> "Error ${e.code()}"
-            }
+            "Error $code"
         }
     } catch (_: Exception) {
-        when(e.code()) {
-            403 -> "Acceso denegado"
-            401 -> "Sesión expirada"
-            else -> "Error ${e.code()}"
-        }
+        "Error $code"
     }
 }
 

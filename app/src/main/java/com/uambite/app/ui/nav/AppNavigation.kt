@@ -23,6 +23,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.uambite.app.data.auth.SessionManager
+import com.uambite.app.data.realtime.WebSocketManager
 import com.uambite.app.domain.repository.AuthRepository
 import com.uambite.app.ui.auth.CambiarPasswordScreen
 import com.uambite.app.ui.auth.LoginScreen
@@ -30,13 +31,19 @@ import com.uambite.app.ui.auth.RegisterScreen
 import com.uambite.app.ui.cart.CartScreen
 import com.uambite.app.ui.cart.CartViewModel
 import com.uambite.app.ui.common.BottomNavBar
+import com.uambite.app.ui.common.OrderStatusBannerHost
 import com.uambite.app.ui.home.HomeScreen
 import com.uambite.app.ui.local.LocalDetailScreen
 import com.uambite.app.ui.orders.OrdersScreen
+import com.uambite.app.ui.pedidodetail.PedidoDetailScreen
 import com.uambite.app.ui.profile.ProfileScreen
 import com.uambite.app.ui.admin.AdminScreen
 import com.uambite.app.ui.localadmin.LocalAdminScreen
 import com.uambite.app.ui.theme.ThemeViewModel
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,6 +60,12 @@ class LogoutViewModel @Inject constructor(
     }
 }
 
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface WebSocketEntryPoint {
+    fun webSocketManager(): WebSocketManager
+}
+
 @Composable
 fun AppNavigation(
     viewModel: StartViewModel = hiltViewModel(),
@@ -65,6 +78,13 @@ fun AppNavigation(
     val startDestination by viewModel.startDestination.collectAsState()
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     val isDarkMode by themeViewModel.isDarkTheme.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val webSocketManager: WebSocketManager = remember(context) {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            WebSocketEntryPoint::class.java
+        ).webSocketManager()
+    }
 
     if (startDestination.isEmpty()) {
         Box(
@@ -201,6 +221,18 @@ fun AppNavigation(
 
                 composable("orders") {
                     OrdersScreen(
+                        onBack = { navController.popBackStack() },
+                        onPedidoClick = { pedidoId ->
+                            navController.navigate("pedido/$pedidoId")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "pedido/{pedidoId}",
+                    arguments = listOf(navArgument("pedidoId") { type = NavType.StringType })
+                ) {
+                    PedidoDetailScreen(
                         onBack = { navController.popBackStack() }
                     )
                 }
@@ -264,6 +296,17 @@ fun AppNavigation(
                 hostState = sessionSnackbarHostState,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+
+            if (currentRoute != "login" && currentRoute != "register" &&
+                currentRoute != "cambiar-password"
+            ) {
+                OrderStatusBannerHost(
+                    webSocketManager = webSocketManager,
+                    onVerPedido = { pedidoId ->
+                        navController.navigate("pedido/$pedidoId")
+                    }
+                )
+            }
         }
     }
 }

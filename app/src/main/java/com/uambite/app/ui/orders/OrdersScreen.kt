@@ -1,6 +1,11 @@
 package com.uambite.app.ui.orders
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +54,8 @@ import com.uambite.app.domain.model.Pedido
 import com.uambite.app.ui.common.EmptyBox
 import com.uambite.app.ui.common.ErrorBox
 import com.uambite.app.ui.common.LoadingBox
+import com.uambite.app.ui.common.MiniOrderTimeline
+import com.uambite.app.ui.theme.Blue100
 import com.uambite.app.ui.theme.Blue600
 import com.uambite.app.ui.theme.Gray500
 import com.uambite.app.ui.theme.Green100
@@ -69,16 +76,18 @@ import com.uambite.app.ui.theme.Yellow800
 @Composable
 fun OrdersScreen(
     onBack: () -> Unit,
+    onPedidoClick: (String) -> Unit = {},
     viewModel: OrdersViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val actionState by viewModel.actionState.collectAsState()
+    val confirmadosLocalmente by viewModel.confirmadosLocalmente.collectAsState()
+    val pedidosResaltados by viewModel.pedidosResaltados.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var pedidoAEliminar by remember { mutableStateOf<Pedido?>(null) }
     var pedidoACancelar by remember { mutableStateOf<Pedido?>(null) }
     var pedidoAConfirmarRetiro by remember { mutableStateOf<Pedido?>(null) }
-    var pedidoAConfirmarRecibido by remember { mutableStateOf<Pedido?>(null) }
 
     LaunchedEffect(actionState) {
         when (val s = actionState) {
@@ -125,9 +134,14 @@ fun OrdersScreen(
                                     PedidoCard(
                                         pedido = pedido,
                                         procesando = actionState is OrdersViewModel.ActionState.Loading,
+                                        confirmadoLocalmente = pedido.id in confirmadosLocalmente,
+                                        resaltado = pedido.id in pedidosResaltados,
+                                        onClick = {
+                                            viewModel.consumirResaltado(pedido.id)
+                                            onPedidoClick(pedido.id)
+                                        },
                                         onCancelar = { pedidoACancelar = pedido },
                                         onConfirmarRetiro = { pedidoAConfirmarRetiro = pedido },
-                                        onConfirmarRecibido = { pedidoAConfirmarRecibido = pedido },
                                         onEliminar = { pedidoAEliminar = pedido }
                                     )
                                 }
@@ -180,18 +194,6 @@ fun OrdersScreen(
             onCancelar = { pedidoAConfirmarRetiro = null }
         )
     }
-    pedidoAConfirmarRecibido?.let { pedido ->
-        ConfirmDialog(
-            titulo = "¿Confirmar recepción?",
-            mensaje = "¿Ya recibiste tu pedido?",
-            textoConfirmar = "Sí, lo recibí",
-            onConfirmar = {
-                pedido.entrega?.id?.let { viewModel.confirmarRecibido(it) }
-                pedidoAConfirmarRecibido = null
-            },
-            onCancelar = { pedidoAConfirmarRecibido = null }
-        )
-    }
 }
 
 @Composable
@@ -223,19 +225,43 @@ private fun OrdersTopBar(onBack: () -> Unit) {
 private fun PedidoCard(
     pedido: Pedido,
     procesando: Boolean,
+    confirmadoLocalmente: Boolean = false,
+    resaltado: Boolean = false,
+    onClick: () -> Unit,
     onCancelar: () -> Unit,
     onConfirmarRetiro: () -> Unit,
-    onConfirmarRecibido: () -> Unit,
     onEliminar: () -> Unit
 ) {
+    val borderModifier = if (resaltado) {
+        Modifier.border(width = 2.dp, color = Green600, shape = RoundedCornerShape(16.dp))
+    } else Modifier
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            .then(borderModifier)
             .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        AnimatedVisibility(visible = resaltado, enter = fadeIn(), exit = fadeOut()) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(Green100)
+                    .padding(horizontal = 10.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "● Actualizado en tiempo real",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Green800,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -253,11 +279,21 @@ private fun PedidoCard(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        Text(
-            text = tipoEntregaTexto(pedido.tipoEntrega),
-            style = MaterialTheme.typography.bodySmall,
-            color = Gray500
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = tipoEntregaTexto(pedido.tipoEntrega),
+                style = MaterialTheme.typography.bodySmall,
+                color = Gray500
+            )
+            if (pedido.estado != "CANCELADO" && pedido.estado != "PENDIENTE") {
+                Spacer(modifier = Modifier.size(10.dp))
+                MiniOrderTimeline(
+                    estado = pedido.estado,
+                    tipoEntrega = pedido.tipoEntrega,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
         if (pedido.descuentoAplicado > 0) {
             Text(
                 text = "Descuento aplicado: -${formatPrecio(pedido.descuentoAplicado)}",
@@ -336,7 +372,7 @@ private fun PedidoCard(
                     Text("Cancelar", style = MaterialTheme.typography.labelMedium)
                 }
             }
-            if (pedido.estado == "LISTO" && pedido.tipoEntrega == "RETIRO_LOCAL") {
+            if (pedido.estado == "LISTO" && pedido.tipoEntrega == "RETIRO_LOCAL" && !confirmadoLocalmente) {
                 Button(
                     onClick = onConfirmarRetiro,
                     enabled = !procesando,
@@ -350,18 +386,19 @@ private fun PedidoCard(
                     Text("Confirmar Retiro", style = MaterialTheme.typography.labelMedium)
                 }
             }
-            if (pedido.estado == "EN_CAMINO" && pedido.tipoEntrega == "ENTREGA_INTERNA") {
-                Button(
-                    onClick = onConfirmarRecibido,
-                    enabled = !procesando,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Green600,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.height(36.dp)
+            if (confirmadoLocalmente) {
+                Box(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .padding(horizontal = 4.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Confirmar Recibido", style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        text = "✓ Confirmado",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Green700,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
             if (pedido.estado in listOf("PENDIENTE", "CANCELADO", "ENTREGADO")) {
@@ -405,7 +442,7 @@ private fun DetalleLinea(detalle: DetallePedido) {
 private fun EstadoChip(estado: String) {
     val (bg, fg) = when (estado) {
         "PENDIENTE" -> Yellow100 to Yellow800
-        "CONFIRMADO" -> com.uambite.app.ui.theme.Blue100 to Blue600
+        "CONFIRMADO" -> Blue100 to Blue600
         "EN_PREPARACION" -> Purple100 to Purple700
         "LISTO" -> Green100 to Green800
         "EN_CAMINO" -> Orange100 to Orange700

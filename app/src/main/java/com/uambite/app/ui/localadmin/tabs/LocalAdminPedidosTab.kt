@@ -1,5 +1,9 @@
 package com.uambite.app.ui.localadmin.tabs
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,49 +14,47 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.uambite.app.domain.model.Pedido
-import com.uambite.app.ui.admin.AdminCard
 import com.uambite.app.ui.admin.tabs.BtnAccion
 import com.uambite.app.ui.admin.tabs.EstadoChip
 import com.uambite.app.ui.common.EmptyBox
 import com.uambite.app.ui.common.LoadingBox
+import com.uambite.app.ui.common.MiniOrderTimeline
 import com.uambite.app.ui.localadmin.LocalAdminViewModel
 import com.uambite.app.ui.theme.Blue600
 import com.uambite.app.ui.theme.Gray500
 import com.uambite.app.ui.theme.Green700
-import com.uambite.app.ui.theme.Green800
 import com.uambite.app.ui.theme.Orange700
 import com.uambite.app.ui.theme.Purple700
 import com.uambite.app.ui.theme.Red700
 import java.util.Locale
 
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-// ...
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-// ...
 @Composable
 fun LocalAdminPedidosTab(viewModel: LocalAdminViewModel) {
     val pedidos by viewModel.pedidos.collectAsState()
     val loading by viewModel.loading.collectAsState()
+    val resaltados by viewModel.pedidosResaltados.collectAsState()
     val isLoading = "pedidos" in loading
 
     var pedidoParaEntrega by remember { mutableStateOf<Pedido?>(null) }
@@ -82,8 +84,10 @@ fun LocalAdminPedidosTab(viewModel: LocalAdminViewModel) {
         items(pedidos, key = { it.id }) { pedido ->
             PedidoRowAdmin(
                 pedido = pedido,
+                resaltado = pedido.id in resaltados,
                 onAccion = { estado -> viewModel.cambiarEstadoPedido(pedido.id, estado) },
-                onCrearEntrega = { pedidoParaEntrega = pedido; ubicacion = "" }
+                onCrearEntrega = { pedidoParaEntrega = pedido; ubicacion = "" },
+                onClick = { viewModel.consumirResaltado(pedido.id) }
             )
         }
     }
@@ -120,10 +124,25 @@ fun LocalAdminPedidosTab(viewModel: LocalAdminViewModel) {
 @Composable
 private fun PedidoRowAdmin(
     pedido: Pedido,
+    resaltado: Boolean = false,
     onAccion: (String) -> Unit,
-    onCrearEntrega: () -> Unit
+    onCrearEntrega: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
-    AdminCard {
+    val borderMod = if (resaltado) {
+        Modifier.border(width = 2.dp, color = Green700, shape = RoundedCornerShape(14.dp))
+    } else Modifier
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .then(borderMod)
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = pedido.id.take(8) + "…",
@@ -143,11 +162,21 @@ private fun PedidoRowAdmin(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        Text(
-            text = tipoEntregaTexto(pedido.tipoEntrega),
-            style = MaterialTheme.typography.bodySmall,
-            color = Gray500
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = tipoEntregaTexto(pedido.tipoEntrega),
+                style = MaterialTheme.typography.bodySmall,
+                color = Gray500
+            )
+            if (pedido.estado != "CANCELADO" && pedido.estado != "PENDIENTE") {
+                Spacer(modifier = Modifier.size(10.dp))
+                MiniOrderTimeline(
+                    estado = pedido.estado,
+                    tipoEntrega = pedido.tipoEntrega,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
         Spacer(Modifier.size(4.dp))
         Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
             if (pedido.estado == "PENDIENTE") {
@@ -161,6 +190,9 @@ private fun PedidoRowAdmin(
             }
             if (pedido.estado == "LISTO" && pedido.tipoEntrega == "ENTREGA_INTERNA") {
                 BtnAccion("Enviar", Orange700) { onCrearEntrega() }
+            }
+            if (pedido.estado == "LISTO" && pedido.tipoEntrega == "RETIRO_LOCAL") {
+                BtnAccion("Entregar", com.uambite.app.ui.theme.Green800) { onAccion("ENTREGADO") }
             }
             if (pedido.estado in listOf("PENDIENTE", "CONFIRMADO", "EN_PREPARACION")) {
                 BtnAccion("Cancelar", Red700) { onAccion("CANCELADO") }

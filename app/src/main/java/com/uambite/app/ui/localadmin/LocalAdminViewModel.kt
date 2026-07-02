@@ -2,6 +2,9 @@ package com.uambite.app.ui.localadmin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uambite.app.data.api.toDomain
+import com.uambite.app.data.realtime.OrderStatusEvent
+import com.uambite.app.data.realtime.WebSocketManager
 import com.uambite.app.domain.model.Descuento
 import com.uambite.app.domain.model.FranjaHoraria
 import com.uambite.app.domain.model.IngredienteExtra
@@ -30,8 +33,18 @@ class LocalAdminViewModel @Inject constructor(
     private val descuentosRepository: DescuentosRepository,
     private val pedidosRepository: PedidosRepository,
     private val usuariosRepository: UsuariosRepository,
-    private val entregasRepository: com.uambite.app.domain.repository.EntregasRepository
+    private val entregasRepository: com.uambite.app.domain.repository.EntregasRepository,
+    private val webSocketManager: WebSocketManager
 ) : ViewModel() {
+
+    private val _pedidosResaltados = MutableStateFlow<Set<String>>(emptySet())
+    val pedidosResaltados: StateFlow<Set<String>> = _pedidosResaltados
+
+    private val _snackbarLocal = MutableStateFlow<String?>(null)
+    val snackbarLocal: StateFlow<String?> = _snackbarLocal
+
+    private val localSubscriptions = mutableSetOf<String>()
+    private val pedidoSubscriptions = mutableSetOf<String>()
 
     private val _misLocales = MutableStateFlow<List<Local>>(emptyList())
     val misLocales: StateFlow<List<Local>> = _misLocales
@@ -59,7 +72,121 @@ class LocalAdminViewModel @Inject constructor(
 
     private var lastUserId: String? = null
 
+    init {
+        observeLocalUpdates()
+    }
+
     fun resetSnackbar() { _snackbar.value = null }
+
+    fun consumirSnackbarLocal() { _snackbarLocal.value = null }
+
+    fun consumirResaltado(pedidoId: String) {
+        if (pedidoId in _pedidosResaltados.value) {
+            _pedidosResaltados.value = _pedidosResaltados.value - pedidoId
+        }
+    }
+
+    private fun observeLocalUpdates() {
+        viewModelScope.launch {
+            webSocketManager.events.collect { event ->
+                when (event) {
+                    is OrderStatusEvent.LocalUpdate -> applyNewPedido(event.pedido.toDomain())
+                    is OrderStatusEvent.PedidoUpdate -> applyStatusUpdate(
+                        event.pedidoId,
+                        event.status.estado,
+                        event.status.tipoEntrega
+                    )
+                }
+            }
+        }
+    }
+
+    private fun applyNewPedido(pedido: Pedido) {
+        val current = _pedidos.value.toMutableList()
+        val existingIdx = current.indexOfFirst { it.id == pedido.id }
+        if (existingIdx >= 0) {
+            current[existingIdx] = pedido
+        } else {
+            current.add(0, pedido)
+        }
+        _pedidos.value = current.sortedByDescending { it.createdAt ?: "" }
+        _pedidosResaltados.value = _pedidosResaltados.value + pedido.id
+        _snackbarLocal.value = "Nuevo pedido #${pedido.id.take(6)}"
+    }
+
+    private fun applyStatusUpdate(pedidoId: String, nuevoEstado: String, tipoEntrega: String?) {
+        viewModelScope.launch {
+            // Refetch the full Pedido so we get the latest Entrega/estado/etc.
+            // The STOMP message only carries estado+tipoEntrega, which isn't
+            // enough when the user confirms via entregasRepository.finalizar().
+            val refreshed = pedidosRepository.getById(pedidoId).getOrNull()
+            if (refreshed != null) {
+                replaceOrPrependPedido(refreshed)
+                emitStatusSnackbar(refreshed.estado, refreshed.tipoEntrega)
+            } else {
+                applyInMemoryStatusUpdate(pedidoId, nuevoEstado, tipoEntrega)
+            }
+        }
+    }
+
+    private fun applyInMemoryStatusUpdate(
+        pedidoId: String,
+        nuevoEstado: String,
+        tipoEntrega: String?
+    ) {
+        val current = _pedidos.value
+        val idx = current.indexOfFirst { it.id == pedidoId }
+        if (idx < 0) return
+        val updated = current.toMutableList()
+        val pedido = updated[idx]
+        updated[idx] = pedido.copy(
+            estado = nuevoEstado,
+            tipoEntrega = tipoEntrega ?: pedido.tipoEntrega
+        )
+        _pedidos.value = updated
+        _pedidosResaltados.value = _pedidosResaltados.value + pedidoId
+        emitStatusSnackbar(nuevoEstado, tipoEntrega)
+    }
+
+    private fun replaceOrPrependPedido(pedido: Pedido) {
+        val current = _pedidos.value.toMutableList()
+        val idx = current.indexOfFirst { it.id == pedido.id }
+        if (idx >= 0) {
+            current[idx] = pedido
+        } else {
+            current.add(0, pedido)
+        }
+        _pedidos.value = current.sortedByDescending { it.createdAt ?: "" }
+        _pedidosResaltados.value = _pedidosResaltados.value + pedido.id
+    }
+
+    private fun emitStatusSnackbar(estado: String, tipoEntrega: String?) {
+        val msg = when (estado) {
+            "CONFIRMADO" -> "Pedido confirmado por el cliente"
+            "EN_PREPARACION" -> "Pedido en preparación"
+            "LISTO" -> "Pedido listo"
+            "EN_CAMINO" -> "Pedido enviado"
+            "ENTREGADO" -> when (tipoEntrega) {
+                "RETIRO_LOCAL" -> "El cliente retiró su pedido"
+                "ENTREGA_INTERNA" -> "El cliente confirmó la entrega"
+                else -> "Pedido entregado"
+            }
+            "CANCELADO" -> "Pedido cancelado"
+            else -> "Pedido → $estado"
+        }
+        _snackbarLocal.value = msg
+    }
+
+    private fun subscribeToOwnerLocales(userId: String) {
+        val ownerLocalIds = _misLocales.value
+            .filter { it.duenoId == userId }
+            .map { it.id }
+            .toSet()
+        (ownerLocalIds - localSubscriptions).forEach { localId ->
+            webSocketManager.subscribeToLocal(localId)
+            localSubscriptions.add(localId)
+        }
+    }
 
     private fun setLoading(tab: String, value: Boolean) {
         val current = _loading.value.toMutableSet()
@@ -100,10 +227,19 @@ class LocalAdminViewModel @Inject constructor(
         viewModelScope.launch {
             setLoading("pedidos", true)
             cargarLocalesPropios(userId) // Mantiene la lista de locales propios actualizada
+            subscribeToOwnerLocales(userId)
             val todos = pedidosRepository.getAllPedidos().getOrNull().orEmpty()
             // El API filtra automáticamente por LOCAL o ADMIN, así que mostramos todo lo que nos llega
             _pedidos.value = todos.sortedByDescending { it.createdAt ?: "" }
+            subscribeToOwnerPedidos(todos.map { it.id }.toSet())
             setLoading("pedidos", false)
+        }
+    }
+
+    private fun subscribeToOwnerPedidos(pedidoIds: Set<String>) {
+        (pedidoIds - pedidoSubscriptions).forEach { pedidoId ->
+            webSocketManager.subscribeToOrder(pedidoId)
+            pedidoSubscriptions.add(pedidoId)
         }
     }
 
@@ -156,11 +292,22 @@ class LocalAdminViewModel @Inject constructor(
 
     fun cambiarEstadoPedido(pedidoId: String, estado: String) {
         viewModelScope.launch {
-            val r = pedidosRepository.cambiarEstado(pedidoId, estado)
-            r.onSuccess {
-                _snackbar.value = "Pedido → $estado"
-                loadTab("pedidos", null)
-            }.onFailure { _snackbar.value = it.message }
+            if (estado == "ENTREGADO") {
+                // Si queremos marcar como entregado directamente (ej: retiro local),
+                // primero creamos la entrega y luego la finalizamos.
+                val rSave = entregasRepository.crear(pedidoId, "Retiro en Local")
+                rSave.onSuccess { e ->
+                    e.id?.let { entregasRepository.finalizar(it) }
+                    _snackbar.value = "Pedido retirado correctamente"
+                    loadTab("pedidos", null)
+                }.onFailure { _snackbar.value = it.message }
+            } else {
+                val r = pedidosRepository.cambiarEstado(pedidoId, estado)
+                r.onSuccess {
+                    _snackbar.value = "Pedido → $estado"
+                    loadTab("pedidos", null)
+                }.onFailure { _snackbar.value = it.message }
+            }
         }
     }
 

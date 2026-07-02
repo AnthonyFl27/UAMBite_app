@@ -6,15 +6,11 @@ import com.uambite.app.data.api.PedidoResponse
 import com.uambite.app.data.api.PedidosApi
 import com.uambite.app.data.api.PrioridadRequest
 import com.uambite.app.data.api.safeApiCall
-import com.uambite.app.domain.model.DetalleIngredienteExtra
-import com.uambite.app.domain.model.DetallePedido
-import com.uambite.app.domain.model.Entrega
-import com.uambite.app.domain.model.Pago
+import com.uambite.app.data.api.toDomain
 import com.uambite.app.domain.model.Pedido
 import com.uambite.app.domain.repository.PedidosRepository
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import javax.inject.Inject
@@ -80,9 +76,9 @@ class PedidosRepositoryImpl @Inject constructor(
                 "CONFIRMADO" -> api.confirmar(id).toDomain()
                 "EN_PREPARACION" -> api.preparar(id).toDomain()
                 "LISTO" -> api.listo(id).toDomain()
-                "ENTREGADO" -> api.entregar(id).toDomain()
                 "CANCELADO" -> api.cancelar(id).toDomain()
-                else -> throw Exception("Estado no soportado: $estado")
+                "ENTREGADO" -> api.entregar(id).toDomain()
+                else -> throw Exception("Estado no soportado vía pedido: $estado. Use entrega si aplica.")
             }
         }
     }
@@ -107,57 +103,4 @@ class PedidosRepositoryImpl @Inject constructor(
             element
         }
     }
-
-    private fun PedidoResponse.toDomain(): Pedido = Pedido(
-        id = id,
-        estado = estado,
-        total = total,
-        subtotal = subtotal,
-        descuentoAplicado = descuentoAplicado,
-        tipoEntrega = tipoEntrega,
-        usuarioId = usuarioId,
-        usuario = usuario,
-        franjaHorariaId = franjaHorariaId,
-        descuentoId = descuentoId,
-        localComidaId = localComidaId,
-        prioridad = prioridad,
-        detalles = detalles.map { it.toDomain() },
-        pago = pago?.toDomain(),
-        entrega = entrega?.toDomain(),
-        createdAt = createdAt
-    )
-
-    private fun com.uambite.app.data.api.DetallePedidoResponse.toDomain(): DetallePedido =
-        DetallePedido(
-            id = id,
-            cantidad = cantidad,
-            precioUnitario = precioUnitario,
-            subtotal = subtotal,
-            producto = producto,
-            productoId = productoId,
-            ingredientesExtra = ingredientesExtra.map { ie ->
-                DetalleIngredienteExtra(
-                    id = ie.id,
-                    ingredienteExtraId = ie.ingredienteExtraId,
-                    nombre = ie.nombre,
-                    precioExtra = ie.precioAdicional
-                )
-            }
-        )
-
-    private fun com.uambite.app.data.api.PagoResponse.toDomain(): Pago = Pago(
-        id = id,
-        metodoPago = metodoPago,
-        monto = monto,
-        fecha = fecha,
-        estado = estado,
-        pedidoId = pedidoId
-    )
-
-    private fun com.uambite.app.data.api.EntregaResponse.toDomain(): Entrega = Entrega(
-        id = id,
-        estado = estado,
-        ubicacion = ubicacion,
-        pedidoId = pedidoId
-    )
 }

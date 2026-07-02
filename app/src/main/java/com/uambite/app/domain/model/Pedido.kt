@@ -12,7 +12,6 @@ data class Pedido(
     val franjaHorariaId: String?,
     val descuentoId: String?,
     val localComidaId: String?,
-    val prioridad: Int,
     val detalles: List<DetallePedido>,
     val pago: Pago?,
     val entrega: Entrega?,

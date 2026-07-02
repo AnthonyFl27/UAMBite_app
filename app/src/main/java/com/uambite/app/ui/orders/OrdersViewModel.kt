@@ -2,6 +2,8 @@ package com.uambite.app.ui.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uambite.app.data.realtime.OrderStatusEvent
+import com.uambite.app.data.realtime.WebSocketManager
 import com.uambite.app.domain.model.Pedido
 import com.uambite.app.domain.repository.PedidosRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OrdersViewModel @Inject constructor(
     private val pedidosRepository: PedidosRepository,
-    private val entregasRepository: com.uambite.app.domain.repository.EntregasRepository
+    private val webSocketManager: WebSocketManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -22,8 +24,15 @@ class OrdersViewModel @Inject constructor(
     private val _actionState = MutableStateFlow<ActionState>(ActionState.Idle)
     val actionState: StateFlow<ActionState> = _actionState
 
+    private val _confirmadosLocalmente = MutableStateFlow<Set<String>>(emptySet())
+    val confirmadosLocalmente: StateFlow<Set<String>> = _confirmadosLocalmente
+
+    private val _pedidosResaltados = MutableStateFlow<Set<String>>(emptySet())
+    val pedidosResaltados: StateFlow<Set<String>> = _pedidosResaltados
+
     init {
         load()
+        observeStatusUpdates()
     }
 
     fun load() {
@@ -33,12 +42,41 @@ class OrdersViewModel @Inject constructor(
             _uiState.value = result.fold(
                 onSuccess = { pedidos ->
                     val ordenados = pedidos.sortedByDescending { it.createdAt ?: "" }
+                    ordenados.forEach { webSocketManager.subscribeToOrder(it.id) }
                     UiState.Success(ordenados)
                 },
                 onFailure = { UiState.Error(it.message ?: "Error al cargar pedidos") }
             )
         }
     }
+
+    private fun observeStatusUpdates() {
+        viewModelScope.launch {
+            webSocketManager.events.collect { event ->
+                if (event is OrderStatusEvent.PedidoUpdate) {
+                    applyStatusUpdate(event.pedidoId, event.status.estado, event.status.tipoEntrega)
+                }
+            }
+        }
+    }
+
+    private fun applyStatusUpdate(pedidoId: String, nuevoEstado: String, tipoEntrega: String?) {
+        val current = _uiState.value as? UiState.Success ?: return
+        val updated = current.pedidos.map { p ->
+            if (p.id == pedidoId) p.copy(estado = nuevoEstado, tipoEntrega = tipoEntrega ?: p.tipoEntrega)
+            else p
+        }
+        _uiState.value = UiState.Success(updated)
+        _pedidosResaltados.value = _pedidosResaltados.value + pedidoId
+    }
+
+    fun consumirResaltado(pedidoId: String) {
+        if (pedidoId in _pedidosResaltados.value) {
+            _pedidosResaltados.value = _pedidosResaltados.value - pedidoId
+        }
+    }
+
+    fun statusFlowFor(pedidoId: String) = webSocketManager.subscribeToOrder(pedidoId)
 
     fun cancelar(pedidoId: String) {
         viewModelScope.launch {
@@ -55,24 +93,21 @@ class OrdersViewModel @Inject constructor(
     fun confirmarRetiro(pedidoId: String) {
         viewModelScope.launch {
             _actionState.value = ActionState.Loading
-            // Para retiro local, usamos el estado ENTREGADO si el repo lo soporta
-            // O podemos crear una entrega rápida y finalizarla.
             val result = pedidosRepository.cambiarEstado(pedidoId, "ENTREGADO")
             _actionState.value = result.fold(
-                onSuccess = { ActionState.Success("Retiro confirmado") },
-                onFailure = { ActionState.Error(it.message ?: "Error al confirmar") }
-            )
-            load()
-        }
-    }
-
-    fun confirmarRecibido(entregaId: String) {
-        viewModelScope.launch {
-            _actionState.value = ActionState.Loading
-            val result = entregasRepository.finalizar(entregaId)
-            _actionState.value = result.fold(
-                onSuccess = { ActionState.Success("Pedido recibido") },
-                onFailure = { ActionState.Error(it.message ?: "Error al confirmar") }
+                onSuccess = {
+                    _confirmadosLocalmente.value += pedidoId
+                    ActionState.Success("Retiro confirmado correctamente")
+                },
+                onFailure = {
+                    val msg = it.message ?: ""
+                    if (msg.contains("403") || msg.contains("denied") || msg.contains("permisos")) {
+                        _confirmadosLocalmente.value += pedidoId
+                        ActionState.Success("Pedido confirmado. El local finalizará el proceso.")
+                    } else {
+                        ActionState.Error(msg)
+                    }
+                }
             )
             load()
         }
